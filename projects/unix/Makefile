@@ -120,9 +120,6 @@ WARNFLAGS ?= -Wall
 CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src
 LDFLAGS += $(SHARED)
 
-# default configuration programs
-SDL_CONFIG = $(CROSS_COMPILE)sdl-config
-
 # Since we are building a shared library, we must compile with -fPIC on some architectures
 # On 32-bit x86 systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
 ifeq ($(PIC), 1)
@@ -175,11 +172,16 @@ ifeq ($(OS), OSX)
 endif
 
 # test for presence of SDL
-ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
-  $(error No SDL development libraries found!)
+ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
+  SDL_CONFIG = $(CROSS_COMPILE)sdl-config
+  ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
+    $(error No SDL development libraries found!)
+  endif
+  SDL_CFLAGS  += $(shell $(SDL_CONFIG) --cflags)
+  SDL_LDLIBS += $(shell $(SDL_CONFIG) --libs)
 endif
-CFLAGS  += $(shell $(SDL_CONFIG) --cflags)
-LDLIBS += $(shell $(SDL_CONFIG) --libs)
+CFLAGS += $(SDL_CFLAGS)
+LDLIBS += $(SDL_LDLIBS)
 
 # set mupen64plus core API header path
 ifneq ("$(APIDIR)","")
