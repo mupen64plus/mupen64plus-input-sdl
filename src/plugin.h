@@ -69,8 +69,7 @@ static inline const char* _SDL_JoystickName(int device_index)
 #include "m64p_plugin.h"
 #include "m64p_config.h"
 
-#define DEVICE_AUTO         (-1)
-#define DEVICE_NOT_JOYSTICK (-2)
+#define DEVICE_NO_JOYSTICK  (-1)
 
 // Some stuff from n-rage plugin
 #define RD_GETSTATUS        0x00        // get status
@@ -154,6 +153,7 @@ extern ptr_ConfigOpenSection      ConfigOpenSection;
 extern ptr_ConfigDeleteSection    ConfigDeleteSection;
 extern ptr_ConfigListParameters   ConfigListParameters;
 extern ptr_ConfigSaveFile         ConfigSaveFile;
+extern ptr_ConfigSaveSection      ConfigSaveSection;
 extern ptr_ConfigSetParameter     ConfigSetParameter;
 extern ptr_ConfigGetParameter     ConfigGetParameter;
 extern ptr_ConfigGetParameterHelp ConfigGetParameterHelp;
