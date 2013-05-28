@@ -538,6 +538,9 @@ void load_configuration(int bPreConfig)
     char DeviceName[4][256];
     int ActiveControllers = 0;
     int sdlNumJoysticks = get_sdl_num_joysticks();
+    float fVersion = 0.0f;
+    const char *sdl_name;
+    int ControllersFound = 0;
 
     /* tell user how many SDL joysticks are available */
     if (!bPreConfig)
@@ -559,7 +562,7 @@ void load_configuration(int bPreConfig)
             return;
         }
         /* Check version number, and if it doesn't match: delete the config section */
-        float fVersion = 0.0f;
+        fVersion = 0.0f;
         if (ConfigGetParameter(pConfig, "version", M64TYPE_FLOAT, &fVersion, sizeof(float)) != M64ERR_SUCCESS || ((int) fVersion) != ((int) CONFIG_VERSION))
         {
             DebugMessage(M64MSG_WARNING, "Missing or incompatible config section '%s'. Clearing.", SectionName);
@@ -664,7 +667,7 @@ void load_configuration(int bPreConfig)
             if (deviceAlreadyUsed)
                 continue;
             /* check if the name matches */
-            const char *sdl_name = get_sdl_joystick_name(sdlCtrlIdx);
+            sdl_name = get_sdl_joystick_name(sdlCtrlIdx);
             if (sdl_name != NULL && strncmp(DeviceName[n64CtrlIdx], sdl_name, 255) == 0)
             {
                 /* set up one or more controllers for this SDL device, if present in InputAutoConfig.ini */
@@ -705,8 +708,8 @@ void load_configuration(int bPreConfig)
             if (deviceAlreadyUsed)
                 continue;
             /* set up one or more controllers for this SDL device, if present in InputAutoConfig.ini */
-            const char *sdl_name = get_sdl_joystick_name(sdlCtrlIdx);
-            int ControllersFound = setup_auto_controllers(bPreConfig, n64CtrlIdx, sdlCtrlIdx, sdl_name, ControlMode, OrigControlMode, DeviceName);
+            sdl_name = get_sdl_joystick_name(sdlCtrlIdx);
+            ControllersFound = setup_auto_controllers(bPreConfig, n64CtrlIdx, sdlCtrlIdx, sdl_name, ControlMode, OrigControlMode, DeviceName);
             if (!bPreConfig && ControllersFound == 0)
                 DebugMessage(M64MSG_ERROR, "No auto-config found for joystick named '%s' in InputAutoConfig.ini", sdl_name);
             /* mark this sdl device as used */
