@@ -112,9 +112,9 @@ static int romopen = 0;         // is a rom opened
 static unsigned char myKeyState[SDL_NUM_SCANCODES];
 
 #ifdef __linux__
-static struct ff_effect ffeffect[3];
-static struct ff_effect ffstrong[3];
-static struct ff_effect ffweak[3];
+static struct ff_effect ffeffect[4];
+static struct ff_effect ffstrong[4];
+static struct ff_effect ffweak[4];
 #endif //__linux__
 
 /* Global functions */
