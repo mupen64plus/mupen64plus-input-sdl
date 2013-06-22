@@ -29,6 +29,7 @@
 #include "osal_preproc.h"
 #include "autoconfig.h"
 #include "plugin.h"
+#include "sdl_key_converter.h"
 
 #include "config.h"
 
@@ -232,9 +233,13 @@ static int load_controller_config(const char *SectionName, int i, int sdlDeviceI
             DebugMessage(M64MSG_WARNING, "missing config key '%s' for controller %i button %i", button_names[j], i+1, j);
             continue;
         }
-        if ((config_ptr = strstr(input_str, "key")) != NULL)
-            if (sscanf(config_ptr, "key(%i)", (int *) &controller[i].button[j].key) != 1)
+        if ((config_ptr = strstr(input_str, "key")) != NULL) {
+            if (sscanf(config_ptr, "key(%i)", (int *) &controller[i].button[j].key) != 1) {
                 DebugMessage(M64MSG_WARNING, "parsing error in key() parameter of button '%s' for controller %i", button_names[j], i + 1);
+            } else {
+                controller[i].button[j].key = sdl_keysym2native(controller[i].button[j].key);
+            }
+        }
         if ((config_ptr = strstr(input_str, "button")) != NULL)
             if (sscanf(config_ptr, "button(%i)", &controller[i].button[j].button) != 1)
                 DebugMessage(M64MSG_WARNING, "parsing error in button() parameter of button '%s' for controller %i", button_names[j], i + 1);
@@ -270,9 +275,14 @@ static int load_controller_config(const char *SectionName, int i, int sdlDeviceI
             DebugMessage(M64MSG_WARNING, "missing config key '%s' for controller %i axis %i", button_names[j], i+1, axis_idx);
             continue;
         }
-        if ((config_ptr = strstr(input_str, "key")) != NULL)
-            if (sscanf(config_ptr, "key(%i,%i)", (int *) &controller[i].axis[axis_idx].key_a, (int *) &controller[i].axis[axis_idx].key_b) != 2)
+        if ((config_ptr = strstr(input_str, "key")) != NULL) {
+            if (sscanf(config_ptr, "key(%i,%i)", (int *) &controller[i].axis[axis_idx].key_a, (int *) &controller[i].axis[axis_idx].key_b) != 2) {
                 DebugMessage(M64MSG_WARNING, "parsing error in key() parameter of axis '%s' for controller %i", button_names[j], i + 1);
+            } else {
+                controller[i].axis[axis_idx].key_a = sdl_keysym2native(controller[i].axis[axis_idx].key_a);
+                controller[i].axis[axis_idx].key_b = sdl_keysym2native(controller[i].axis[axis_idx].key_b);
+            }
+        }
         if ((config_ptr = strstr(input_str, "button")) != NULL)
             if (sscanf(config_ptr, "button(%i,%i)", &controller[i].axis[axis_idx].button_a, &controller[i].axis[axis_idx].button_b) != 2)
                 DebugMessage(M64MSG_WARNING, "parsing error in button() parameter of axis '%s' for controller %i", button_names[j], i + 1);
@@ -342,7 +352,7 @@ static void init_controller_config(int iCtrlIdx, const char *pccDeviceName, eMod
         ParamString[0] = 0;
         if (controller[iCtrlIdx].button[j].key > 0)
         {
-            sprintf(Param, "key(%i) ", controller[iCtrlIdx].button[j].key);
+            sprintf(Param, "key(%i) ", sdl_native2keysym(controller[iCtrlIdx].button[j].key));
             strcat(ParamString, Param);
         }
         if (controller[iCtrlIdx].button[j].button >= 0)
@@ -388,7 +398,7 @@ static void init_controller_config(int iCtrlIdx, const char *pccDeviceName, eMod
         ParamString[0] = 0;
         if (controller[iCtrlIdx].axis[j].key_a > 0 && controller[iCtrlIdx].axis[j].key_b > 0)
         {
-            sprintf(Param, "key(%i,%i) ", controller[iCtrlIdx].axis[j].key_a, controller[iCtrlIdx].axis[j].key_b);
+            sprintf(Param, "key(%i,%i) ", sdl_native2keysym(controller[iCtrlIdx].axis[j].key_a), sdl_native2keysym(controller[iCtrlIdx].axis[j].key_b));
             strcat(ParamString, Param);
         }
         if (controller[iCtrlIdx].axis[j].button_a >= 0 && controller[iCtrlIdx].axis[j].button_b >= 0)

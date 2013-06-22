@@ -256,6 +256,7 @@ OBJDIR = _obj$(POSTFIX)
 SOURCE = \
 	$(SRCDIR)/plugin.c \
 	$(SRCDIR)/autoconfig.c \
+	$(SRCDIR)/sdl_key_converter.c \
 	$(SRCDIR)/config.c
 
 ifeq ($(OS),MINGW)
