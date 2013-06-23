@@ -306,7 +306,7 @@ doSdlKeys(unsigned char* keystate)
                     grabmouse = !grabmouse;
                     // grab/ungrab mouse
 #if SDL_VERSION_ATLEAST(2,0,0)
-#warning SDL mouse grabbing not yet supported with SDL 2.0
+                    SDL_SetRelativeMouseMode(grabmouse ? SDL_TRUE : SDL_FALSE);
 #else
                     SDL_WM_GrabInput( grabmouse ? SDL_GRAB_ON : SDL_GRAB_OFF );
 #endif
@@ -567,9 +567,10 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     if (controller[Control].mouse)
     {
 #if SDL_VERSION_ATLEAST(2,0,0)
-#warning SDL mouse grabbing not yet supported with SDL 2.0
+        if (SDL_GetRelativeMouseMode())
 #else
         if (SDL_WM_GrabInput(SDL_GRAB_QUERY) == SDL_GRAB_ON)
+#endif
         {
             SDL_PumpEvents();
 #if SDL_VERSION_ATLEAST(1,3,0)
@@ -578,6 +579,11 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
             while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_EVENTMASK(SDL_MOUSEMOTION)) == 1)
 #endif
             {
+#if SDL_VERSION_ATLEAST(2,0,0)
+                int w, h;
+                SDL_Window *focus;
+#endif
+
                 if (event.motion.xrel)
                 {
                     mousex_residual += (int) (event.motion.xrel * controller[Control].mouse_sens[0]);
@@ -586,10 +592,20 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 {
                     mousey_residual += (int) (event.motion.yrel * controller[Control].mouse_sens[1]);
                 }
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+                focus = SDL_GetKeyboardFocus();
+                if (focus) {
+                    SDL_GetWindowSize(focus, &w, &h);
+                    SDL_WarpMouseInWindow(focus, w / 2, h / 2);
+                } else {
+                    mousex_residual = 0;
+                    mousey_residual = 0;
+                }
+#endif
             }
         }
         else
-#endif
         {
             mousex_residual = 0;
             mousey_residual = 0;
@@ -842,7 +858,7 @@ EXPORT void CALL RomClosed(void)
 
     // release/ungrab mouse
 #if SDL_VERSION_ATLEAST(2,0,0)
-#warning SDL mouse grabbing not yet supported with SDL 2.0
+    SDL_SetRelativeMouseMode(SDL_FALSE);
 #else
     SDL_WM_GrabInput( SDL_GRAB_OFF );
 #endif
@@ -884,10 +900,12 @@ EXPORT int CALL RomOpen(void)
     // grab mouse
     if (controller[0].mouse || controller[1].mouse || controller[2].mouse || controller[3].mouse)
     {
-#if SDL_VERSION_ATLEAST(2,0,0)
-#warning SDL mouse grabbing not yet supported with SDL 2.0
-#else
         SDL_ShowCursor( 0 );
+#if SDL_VERSION_ATLEAST(2,0,0)
+        if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
+            DebugMessage(M64MSG_WARNING, "Couldn't grab input! Mouse support won't work!");
+        }
+#else
         if (SDL_WM_GrabInput( SDL_GRAB_ON ) != SDL_GRAB_ON)
         {
             DebugMessage(M64MSG_WARNING, "Couldn't grab input! Mouse support won't work!");
