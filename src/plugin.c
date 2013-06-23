@@ -111,7 +111,14 @@ static int romopen = 0;         // is a rom opened
 
 static unsigned char myKeyState[SDL_NUM_SCANCODES];
 
-#ifdef __linux__
+#if SDL_VERSION_ATLEAST(2,0,0)
+static SDL_HapticEffect ffeffect[4];
+static int ffeffect_id[4];
+static SDL_HapticEffect ffstrong[4];
+static int ffstrong_id[4];
+static SDL_HapticEffect ffweak[4];
+static int ffweak_id[4];
+#elif __linux__
 static struct ff_effect ffeffect[4];
 static struct ff_effect ffstrong[4];
 static struct ff_effect ffweak[4];
@@ -402,7 +409,15 @@ EXPORT void CALL ControllerCommand(int Control, unsigned char *Command)
                 unsigned int dwAddress = (Command[3] << 8) + (Command[4] & 0xE0);
               if (dwAddress == PAK_IO_RUMBLE && *Data)
                     DebugMessage(M64MSG_VERBOSE, "Triggering rumble pack.");
-#ifdef __linux__
+#if SDL_VERSION_ATLEAST(2,0,0)
+                if(dwAddress == PAK_IO_RUMBLE && controller[Control].event_joystick) {
+                    if (*Data) {
+                        SDL_HapticRunEffect(controller[Control].event_joystick, ffeffect_id[Control], 1);
+                    } else {
+                        SDL_HapticStopEffect(controller[Control].event_joystick, ffeffect_id[Control]);
+                    }
+                }
+#elif __linux__
                 struct input_event play;
                 if( dwAddress == PAK_IO_RUMBLE && controller[Control].event_joystick != 0)
                 {
@@ -617,7 +632,29 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     *Keys = controller[Control].buttons;
 
     /* handle mempack / rumblepak switching (only if rumble is active on joystick) */
-#ifdef __linux__
+#if SDL_VERSION_ATLEAST(2,0,0)
+    if (controller[Control].event_joystick) {
+        static unsigned int SwitchPackTime[4] = {0, 0, 0, 0}, SwitchPackType[4] = {0, 0, 0, 0};
+        if (controller[Control].buttons.Value & button_bits[14]) {
+            SwitchPackTime[Control] = SDL_GetTicks();         // time at which the 'switch pack' command was given
+            SwitchPackType[Control] = PLUGIN_MEMPAK;          // type of new pack to insert
+            controller[Control].control->Plugin = PLUGIN_NONE;// remove old pack
+            SDL_HapticRunEffect(controller[Control].event_joystick, ffweak_id[Control], 1);
+        }
+        if (controller[Control].buttons.Value & button_bits[15]) {
+            SwitchPackTime[Control] = SDL_GetTicks();         // time at which the 'switch pack' command was given
+            SwitchPackType[Control] = PLUGIN_RAW;             // type of new pack to insert
+            controller[Control].control->Plugin = PLUGIN_NONE;// remove old pack
+            SDL_HapticRunEffect(controller[Control].event_joystick, ffstrong_id[Control], 1);
+        }
+        // handle inserting new pack if the time has arrived
+        if (SwitchPackTime[Control] != 0 && (SDL_GetTicks() - SwitchPackTime[Control]) >= 1000)
+        {
+            controller[Control].control->Plugin = SwitchPackType[Control];
+            SwitchPackTime[Control] = 0;
+        }
+    }
+#elif __linux__
     if (controller[Control].event_joystick != 0)
     {
         struct input_event play;
@@ -657,9 +694,82 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     controller[Control].buttons.Value = 0;
 }
 
+static void InitiateJoysticks(int cntrl)
+{
+    // init SDL joystick subsystem
+    if (!SDL_WasInit(SDL_INIT_JOYSTICK))
+        if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == -1) {
+            DebugMessage(M64MSG_ERROR, "Couldn't init SDL joystick subsystem: %s", SDL_GetError() );
+            return;
+        }
+
+    if (controller[cntrl].device >= 0) {
+        controller[cntrl].joystick = SDL_JoystickOpen(controller[cntrl].device);
+        if (!controller[cntrl].joystick)
+            DebugMessage(M64MSG_WARNING, "Couldn't open joystick for controller #%d: %s", cntrl + 1, SDL_GetError());
+    } else {
+        controller[cntrl].joystick = NULL;
+    }
+}
+
+static void DeinitJoystick(int cntrl)
+{
+#if SDL_VERSION_ATLEAST(2,0,0)
+    if (controller[cntrl].joystick) {
+        SDL_JoystickClose(controller[cntrl].joystick);
+        controller[cntrl].joystick = NULL;
+    }
+#endif
+}
+
 static void InitiateRumble(int cntrl)
 {
-#ifdef __linux__
+#if SDL_VERSION_ATLEAST(2,0,0)
+    if (!SDL_WasInit(SDL_INIT_HAPTIC)) {
+        if (SDL_InitSubSystem(SDL_INIT_HAPTIC) == -1) {
+            DebugMessage(M64MSG_ERROR, "Couldn't init SDL haptic subsystem: %s", SDL_GetError() );
+            return;
+        }
+    }
+
+    controller[cntrl].event_joystick = SDL_HapticOpenFromJoystick(controller[cntrl].joystick);
+    if (!controller[cntrl].event_joystick) {
+        DebugMessage(M64MSG_WARNING, "Couldn't open rumble support for joystick #%i", cntrl + 1);
+        return;
+    }
+
+    if ((SDL_HapticQuery(controller[cntrl].event_joystick) & SDL_HAPTIC_SINE) == 0) {
+        controller[cntrl].event_joystick = NULL;
+        DebugMessage(M64MSG_WARNING, "Joystick #%i doesn't support sine effect", cntrl + 1);
+        return;
+    }
+
+    memset(&ffeffect[cntrl], 0, sizeof(SDL_HapticEffect));
+    ffeffect[cntrl].type = SDL_HAPTIC_SINE;
+    ffeffect[cntrl].periodic.period = 1000;
+    ffeffect[cntrl].periodic.magnitude = 0x7FFF;
+    ffeffect[cntrl].periodic.length = SDL_HAPTIC_INFINITY;
+
+    ffeffect_id[cntrl] = SDL_HapticNewEffect(controller[cntrl].event_joystick, &ffeffect[cntrl]);
+
+    memset(&ffstrong[cntrl], 0, sizeof(SDL_HapticEffect));
+    ffstrong[cntrl].type = SDL_HAPTIC_SINE;
+    ffstrong[cntrl].periodic.period = 1000;
+    ffstrong[cntrl].periodic.magnitude = 0x7FFF;
+    ffstrong[cntrl].periodic.length = 500;
+
+    ffstrong_id[cntrl] = SDL_HapticNewEffect(controller[cntrl].event_joystick, &ffstrong[cntrl]);
+
+    memset(&ffstrong[cntrl], 0, sizeof(SDL_HapticEffect));
+    ffweak[cntrl].type = SDL_HAPTIC_SINE;
+    ffweak[cntrl].periodic.period = 1000;
+    ffweak[cntrl].periodic.magnitude = 0x3FFF;
+    ffweak[cntrl].periodic.length = 500;
+
+    ffweak_id[cntrl] = SDL_HapticNewEffect(controller[cntrl].event_joystick, &ffweak[cntrl]);
+
+    DebugMessage(M64MSG_INFO, "Rumble activated on N64 joystick #%i", cntrl + 1);
+#elif __linux__
     DIR* dp;
     struct dirent* ep;
     unsigned long features[4];
@@ -760,6 +870,19 @@ static void InitiateRumble(int cntrl)
 #endif /* __linux__ */
 }
 
+static void DeinitRumble(int cntrl)
+{
+#if SDL_VERSION_ATLEAST(2,0,0)
+    if (controller[cntrl].event_joystick) {
+        SDL_HapticDestroyEffect(controller[cntrl].event_joystick, ffeffect_id[cntrl]);
+        SDL_HapticDestroyEffect(controller[cntrl].event_joystick, ffstrong_id[cntrl]);
+        SDL_HapticDestroyEffect(controller[cntrl].event_joystick, ffweak_id[cntrl]);
+        SDL_HapticClose(controller[cntrl].event_joystick);
+        controller[cntrl].event_joystick = NULL;
+    }
+#endif
+}
+
 /******************************************************************
   Function: InitiateControllers
   Purpose:  This function initialises how each of the controllers
@@ -790,10 +913,13 @@ EXPORT void CALL InitiateControllers(CONTROL_INFO ControlInfo)
     for( i = 0; i < 4; i++ )
     {
         // test for rumble support for this joystick
+        InitiateJoysticks(i);
         InitiateRumble(i);
         // if rumble not supported, switch to mempack
         if (controller[i].control->Plugin == PLUGIN_RAW && controller[i].event_joystick == 0)
             controller[i].control->Plugin = PLUGIN_MEMPAK;
+        DeinitRumble(i);
+        DeinitJoystick(i);
     }
 
     DebugMessage(M64MSG_INFO, "%s version %i.%i.%i initialized.", PLUGIN_NAME, VERSION_PRINTF_SPLIT(PLUGIN_VERSION));
@@ -830,12 +956,10 @@ EXPORT void CALL RomClosed(void)
     int i;
 
     // close joysticks
-    for( i = 0; i < 4; i++ )
-        if( controller[i].joystick )
-        {
-            SDL_JoystickClose( controller[i].joystick );
-            controller[i].joystick = NULL;
-        }
+    for( i = 0; i < 4; i++ ) {
+        DeinitRumble(i);
+        DeinitJoystick(i);
+    }
 
     // quit SDL joystick subsystem
     SDL_QuitSubSystem( SDL_INIT_JOYSTICK );
@@ -871,15 +995,10 @@ EXPORT int CALL RomOpen(void)
         }
 
     // open joysticks
-    for( i = 0; i < 4; i++ )
-        if( controller[i].device >= 0 )
-        {
-            controller[i].joystick = SDL_JoystickOpen( controller[i].device );
-            if( controller[i].joystick == NULL )
-                DebugMessage(M64MSG_WARNING, "Couldn't open joystick for controller #%d: %s", i + 1, SDL_GetError() );
-        }
-        else
-            controller[i].joystick = NULL;
+    for (i = 0; i < 4; i++) {
+        InitiateJoysticks(i);
+        InitiateRumble(i);
+    }
 
     // grab mouse
     if (controller[0].mouse || controller[1].mouse || controller[2].mouse || controller[3].mouse)
