@@ -111,14 +111,7 @@ static int romopen = 0;         // is a rom opened
 
 static unsigned char myKeyState[SDL_NUM_SCANCODES];
 
-#if SDL_VERSION_ATLEAST(2,0,0)
-static SDL_HapticEffect ffeffect[4];
-static int ffeffect_id[4];
-static SDL_HapticEffect ffstrong[4];
-static int ffstrong_id[4];
-static SDL_HapticEffect ffweak[4];
-static int ffweak_id[4];
-#elif __linux__
+#if __linux__ && !SDL_VERSION_ATLEAST(2,0,0)
 static struct ff_effect ffeffect[4];
 static struct ff_effect ffstrong[4];
 static struct ff_effect ffweak[4];
@@ -412,9 +405,9 @@ EXPORT void CALL ControllerCommand(int Control, unsigned char *Command)
 #if SDL_VERSION_ATLEAST(2,0,0)
                 if(dwAddress == PAK_IO_RUMBLE && controller[Control].event_joystick) {
                     if (*Data) {
-                        SDL_HapticRunEffect(controller[Control].event_joystick, ffeffect_id[Control], 1);
+                        SDL_HapticRumblePlay(controller[Control].event_joystick, 1, SDL_HAPTIC_INFINITY);
                     } else {
-                        SDL_HapticStopEffect(controller[Control].event_joystick, ffeffect_id[Control]);
+                        SDL_HapticRumbleStop(controller[Control].event_joystick);
                     }
                 }
 #elif __linux__
@@ -639,17 +632,18 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
             SwitchPackTime[Control] = SDL_GetTicks();         // time at which the 'switch pack' command was given
             SwitchPackType[Control] = PLUGIN_MEMPAK;          // type of new pack to insert
             controller[Control].control->Plugin = PLUGIN_NONE;// remove old pack
-            SDL_HapticRunEffect(controller[Control].event_joystick, ffweak_id[Control], 1);
+            SDL_HapticRumblePlay(controller[Control].event_joystick, 0.5, 500);
         }
         if (controller[Control].buttons.Value & button_bits[15]) {
             SwitchPackTime[Control] = SDL_GetTicks();         // time at which the 'switch pack' command was given
             SwitchPackType[Control] = PLUGIN_RAW;             // type of new pack to insert
             controller[Control].control->Plugin = PLUGIN_NONE;// remove old pack
-            SDL_HapticRunEffect(controller[Control].event_joystick, ffstrong_id[Control], 1);
+            SDL_HapticRumblePlay(controller[Control].event_joystick, 1, 500);
         }
         // handle inserting new pack if the time has arrived
         if (SwitchPackTime[Control] != 0 && (SDL_GetTicks() - SwitchPackTime[Control]) >= 1000)
         {
+            SDL_HapticRumbleStop(controller[Control].event_joystick);
             controller[Control].control->Plugin = SwitchPackType[Control];
             SwitchPackTime[Control] = 0;
         }
@@ -738,35 +732,19 @@ static void InitiateRumble(int cntrl)
         return;
     }
 
-    if ((SDL_HapticQuery(controller[cntrl].event_joystick) & SDL_HAPTIC_SINE) == 0) {
+    if (SDL_HapticRumbleSupported(controller[cntrl].event_joystick) == SDL_FALSE) {
+        SDL_HapticClose(controller[cntrl].event_joystick);
         controller[cntrl].event_joystick = NULL;
-        DebugMessage(M64MSG_WARNING, "Joystick #%i doesn't support sine effect", cntrl + 1);
+        DebugMessage(M64MSG_WARNING, "Joystick #%i doesn't support rumble effect", cntrl + 1);
         return;
     }
 
-    memset(&ffeffect[cntrl], 0, sizeof(SDL_HapticEffect));
-    ffeffect[cntrl].type = SDL_HAPTIC_SINE;
-    ffeffect[cntrl].periodic.period = 1000;
-    ffeffect[cntrl].periodic.magnitude = 0x7FFF;
-    ffeffect[cntrl].periodic.length = SDL_HAPTIC_INFINITY;
-
-    ffeffect_id[cntrl] = SDL_HapticNewEffect(controller[cntrl].event_joystick, &ffeffect[cntrl]);
-
-    memset(&ffstrong[cntrl], 0, sizeof(SDL_HapticEffect));
-    ffstrong[cntrl].type = SDL_HAPTIC_SINE;
-    ffstrong[cntrl].periodic.period = 1000;
-    ffstrong[cntrl].periodic.magnitude = 0x7FFF;
-    ffstrong[cntrl].periodic.length = 500;
-
-    ffstrong_id[cntrl] = SDL_HapticNewEffect(controller[cntrl].event_joystick, &ffstrong[cntrl]);
-
-    memset(&ffstrong[cntrl], 0, sizeof(SDL_HapticEffect));
-    ffweak[cntrl].type = SDL_HAPTIC_SINE;
-    ffweak[cntrl].periodic.period = 1000;
-    ffweak[cntrl].periodic.magnitude = 0x3FFF;
-    ffweak[cntrl].periodic.length = 500;
-
-    ffweak_id[cntrl] = SDL_HapticNewEffect(controller[cntrl].event_joystick, &ffweak[cntrl]);
+    if (SDL_HapticRumbleInit(controller[cntrl].event_joystick) != 0) {
+        SDL_HapticClose(controller[cntrl].event_joystick);
+        controller[cntrl].event_joystick = NULL;
+        DebugMessage(M64MSG_WARNING, "Rumble initialization failed for Joystick #%i", cntrl + 1);
+        return;
+    }
 
     DebugMessage(M64MSG_INFO, "Rumble activated on N64 joystick #%i", cntrl + 1);
 #elif __linux__
@@ -874,9 +852,6 @@ static void DeinitRumble(int cntrl)
 {
 #if SDL_VERSION_ATLEAST(2,0,0)
     if (controller[cntrl].event_joystick) {
-        SDL_HapticDestroyEffect(controller[cntrl].event_joystick, ffeffect_id[cntrl]);
-        SDL_HapticDestroyEffect(controller[cntrl].event_joystick, ffstrong_id[cntrl]);
-        SDL_HapticDestroyEffect(controller[cntrl].event_joystick, ffweak_id[cntrl]);
         SDL_HapticClose(controller[cntrl].event_joystick);
         controller[cntrl].event_joystick = NULL;
     }
