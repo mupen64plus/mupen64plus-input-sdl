@@ -118,26 +118,40 @@ int auto_copy_inputconfig(const char *pccSourceSectionName, const char *pccDestS
 static int auto_compare_name(const char *joySDLName, char *line)
 {
     char *wordPtr;
-    int  joyFound = 1;
+    int  joyFound = 1, joyFoundPrio = 3;
     char Word[64];
 
     wordPtr = line;
     /* first, if there is a preceding system name in this .ini device name, and the system matches, then strip out */
 #if defined(__unix__)
-    if (strncmp(wordPtr, "Unix:", 5) == 0)
+    if (strncmp(wordPtr, "Unix:", 5) == 0) {
         wordPtr = StripSpace(wordPtr + 5);
+        joyFoundPrio = 2;
+    }
 #endif
 #if defined(__linux__)
-    if (strncmp(wordPtr, "Linux:", 6) == 0)
+    if (strncmp(wordPtr, "Linux:", 6) == 0) {
         wordPtr = StripSpace(wordPtr + 6);
+        joyFoundPrio = 2;
+    }
 #endif
 #if defined(__APPLE__)
-    if (strncmp(wordPtr, "OSX:", 4) == 0)
+    if (strncmp(wordPtr, "OSX:", 4) == 0) {
         wordPtr = StripSpace(wordPtr + 4);
+        joyFoundPrio = 2;
+    }
 #endif
 #if defined(WIN32)
-    if (strncmp(wordPtr, "Win32:", 6) == 0)
+    if (strncmp(wordPtr, "Win32:", 6) == 0) {
         wordPtr = StripSpace(wordPtr + 6);
+        joyFoundPrio = 2;
+    }
+#if SDL_VERSION_ATLEAST(2,0,0)
+    else if (strncmp(wordPtr, "XInput:", 7) == 0) {
+        wordPtr = StripSpace(wordPtr + 7);
+        joyFoundPrio = 1;
+    }
+#endif
 #endif
     /* search in the .ini device name for all the words in the joystick name.  If any are missing, then this is not the right joystick model */
     while (wordPtr != NULL && strlen(wordPtr) > 0)
@@ -161,7 +175,10 @@ static int auto_compare_name(const char *joySDLName, char *line)
             joyFound = 0;
     }
 
-    return joyFound;
+    if (joyFound)
+        return joyFoundPrio;
+    else
+        return 0;
 }
 
 int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
@@ -173,6 +190,7 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
     char *pchIni, *pchNextLine, *pchCurLine;
     long iniLength;
     int ControllersFound = 0;
+    int joyFoundPrio = -1;
 
     /* if we couldn't get a name (no joystick plugged in to given port), then return with a failure */
     if (joySDLName == NULL)
@@ -217,6 +235,7 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
     while (pchNextLine != NULL && *pchNextLine != 0)
     {
         char *pivot = NULL;
+        int  joyFound = 0;
         /* set up character pointers */
         pchCurLine = pchNextLine;
         pchNextLine = strchr(pchNextLine, '\n');
@@ -231,26 +250,18 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
         /* handle section (joystick name in ini file) */
         if (*pchCurLine == '[' && pchCurLine[strlen(pchCurLine)-1] == ']')
         {
-            int  joyFound;
-
+            /* only switch to name search when some section body was identified since last header */
             if (eParseState == E_PARAM_READ)
-            {
-                /* we've finished parsing all parameters for the discovered input device */
-                free(pchIni);
-                return ControllersFound;
-            }
-            else if (eParseState == E_NAME_FOUND)
-            {
-                /* this is an equivalent device name to the one we're looking for (and found); keep looking for parameters */
-                continue;
-            }
+                eParseState = E_NAME_SEARCH;
+
             /* we need to look through the device name word by word to see if it matches the joySDLName that we're looking for */ 
             pchCurLine[strlen(pchCurLine)-1] = 0;
             joyFound = auto_compare_name(joySDLName, StripSpace(pchCurLine + 1));
             /* if we found the right joystick, then open up the core config section to store parameters and set the 'device' param */
-            if (joyFound)
+            if (joyFound && (joyFoundPrio == -1 || joyFound < joyFoundPrio))
             {
                 char SectionName[32];
+                ControllersFound = 0;
                 sprintf(SectionName, "AutoConfig%i", ControllersFound);
                 if (ConfigOpenSection(SectionName, &pConfig) != M64ERR_SUCCESS)
                 {
@@ -261,6 +272,7 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
                 eParseState = E_NAME_FOUND;
                 ControllersFound++;
                 ConfigSetParameter(pConfig, "device", M64TYPE_INT, &iDeviceIdx);
+                joyFoundPrio = joyFound;
             }
             continue;
         }
@@ -300,6 +312,7 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
             /* if we haven't found the correct section yet, just skip this */
             if (eParseState == E_NAME_SEARCH)
                 continue;
+            eParseState = E_PARAM_READ;
             /* otherwise parse the keyword */
             if (strcmp(pchCurLine, "__NextController:") == 0)
             {
@@ -332,7 +345,7 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
         DebugMessage(M64MSG_ERROR, "Invalid line in %s: '%s'", INI_FILE_NAME, pchCurLine);
     }
 
-    if (eParseState == E_PARAM_READ)
+    if (joyFoundPrio != -1)
     {
         /* we've finished parsing all parameters for the discovered input device, which is the last in the .ini file */
         free(pchIni);
