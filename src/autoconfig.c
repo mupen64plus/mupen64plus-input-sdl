@@ -115,6 +115,55 @@ int auto_copy_inputconfig(const char *pccSourceSectionName, const char *pccDestS
     return 1;
 }
 
+static int auto_compare_name(const char *joySDLName, char *line)
+{
+    char *wordPtr;
+    int  joyFound = 1;
+    char Word[64];
+
+    wordPtr = line;
+    /* first, if there is a preceding system name in this .ini device name, and the system matches, then strip out */
+#if defined(__unix__)
+    if (strncmp(wordPtr, "Unix:", 5) == 0)
+        wordPtr = StripSpace(wordPtr + 5);
+#endif
+#if defined(__linux__)
+    if (strncmp(wordPtr, "Linux:", 6) == 0)
+        wordPtr = StripSpace(wordPtr + 6);
+#endif
+#if defined(__APPLE__)
+    if (strncmp(wordPtr, "OSX:", 4) == 0)
+        wordPtr = StripSpace(wordPtr + 4);
+#endif
+#if defined(WIN32)
+    if (strncmp(wordPtr, "Win32:", 6) == 0)
+        wordPtr = StripSpace(wordPtr + 6);
+#endif
+    /* search in the .ini device name for all the words in the joystick name.  If any are missing, then this is not the right joystick model */
+    while (wordPtr != NULL && strlen(wordPtr) > 0)
+    {
+        char *nextSpace = strchr(wordPtr, ' ');
+        if (nextSpace == NULL)
+        {
+            strncpy(Word, wordPtr, 63);
+            Word[63] = 0;
+            wordPtr = NULL;
+        }
+        else
+        {
+            int length = (int) (nextSpace - wordPtr);
+            if (length > 63) length = 63;
+            strncpy(Word, wordPtr, length);
+            Word[length] = 0;
+            wordPtr = nextSpace + 1;
+        }
+        if (strcasestr(joySDLName, Word) == NULL)
+            joyFound = 0;
+    }
+
+    return joyFound;
+}
+
 int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
 {
     FILE *pfIn;
@@ -182,9 +231,7 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
         /* handle section (joystick name in ini file) */
         if (*pchCurLine == '[' && pchCurLine[strlen(pchCurLine)-1] == ']')
         {
-            char Word[64];
-            char *wordPtr;
-            int  joyFound = 1;
+            int  joyFound;
 
             if (eParseState == E_PARAM_READ)
             {
@@ -199,45 +246,7 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
             }
             /* we need to look through the device name word by word to see if it matches the joySDLName that we're looking for */ 
             pchCurLine[strlen(pchCurLine)-1] = 0;
-            wordPtr = StripSpace(pchCurLine + 1);
-            /* first, if there is a preceding system name in this .ini device name, and the system matches, then strip out */
-#if defined(__unix__)
-            if (strncmp(wordPtr, "Unix:", 5) == 0)
-                wordPtr = StripSpace(wordPtr + 5);
-#endif
-#if defined(__linux__)
-            if (strncmp(wordPtr, "Linux:", 6) == 0)
-                wordPtr = StripSpace(wordPtr + 6);
-#endif
-#if defined(__APPLE__)
-            if (strncmp(wordPtr, "OSX:", 4) == 0)
-                wordPtr = StripSpace(wordPtr + 4);
-#endif
-#if defined(WIN32)
-            if (strncmp(wordPtr, "Win32:", 6) == 0)
-                wordPtr = StripSpace(wordPtr + 6);
-#endif
-            /* search in the .ini device name for all the words in the joystick name.  If any are missing, then this is not the right joystick model */
-            while (wordPtr != NULL && strlen(wordPtr) > 0)
-            {
-                char *nextSpace = strchr(wordPtr, ' ');
-                if (nextSpace == NULL)
-                {
-                    strncpy(Word, wordPtr, 63);
-                    Word[63] = 0;
-                    wordPtr = NULL;
-                }
-                else
-                {
-                    int length = (int) (nextSpace - wordPtr);
-                    if (length > 63) length = 63;
-                    strncpy(Word, wordPtr, length);
-                    Word[length] = 0;
-                    wordPtr = nextSpace + 1;
-                }
-                if (strcasestr(joySDLName, Word) == NULL)
-                    joyFound = 0;
-            }
+            joyFound = auto_compare_name(joySDLName, StripSpace(pchCurLine + 1));
             /* if we found the right joystick, then open up the core config section to store parameters and set the 'device' param */
             if (joyFound)
             {
