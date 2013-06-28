@@ -673,7 +673,15 @@ void load_configuration(int bPreConfig)
                 /* set up one or more controllers for this SDL device, if present in InputAutoConfig.ini */
                 int ControllersFound = setup_auto_controllers(bPreConfig, n64CtrlIdx, sdlCtrlIdx, sdl_name, ControlMode, OrigControlMode, DeviceName);
                 if (ControllersFound == 0)
+                {
+                    // error: no auto-config found for this SDL device
                     DebugMessage(M64MSG_ERROR, "No auto-config found for joystick named '%s' in InputAutoConfig.ini", sdl_name);
+                    // mark this device as being used just so we don't complain about it again
+                    sdlDevicesUsed[sdlNumDevUsed++] = sdlCtrlIdx;
+                    // quit looking for SDL joysticks which match the name, because there's no valid autoconfig for that name.
+                    // this controller will be unused; skip to the next one
+                    break;
+                }
                 /* mark this sdl device as used */
                 sdlDevicesUsed[sdlNumDevUsed++] = sdlCtrlIdx;
                 ActiveControllers += ControllersFound;
@@ -711,7 +719,14 @@ void load_configuration(int bPreConfig)
             sdl_name = get_sdl_joystick_name(sdlCtrlIdx);
             ControllersFound = setup_auto_controllers(bPreConfig, n64CtrlIdx, sdlCtrlIdx, sdl_name, ControlMode, OrigControlMode, DeviceName);
             if (!bPreConfig && ControllersFound == 0)
+            {
+                // error: no auto-config found for this SDL device
                 DebugMessage(M64MSG_ERROR, "No auto-config found for joystick named '%s' in InputAutoConfig.ini", sdl_name);
+                // mark this device as being used just so we don't complain about it again
+                sdlDevicesUsed[sdlNumDevUsed++] = sdlCtrlIdx;
+                // keep trying more SDL devices to see if we can auto-config one for this N64 controller
+                continue;
+            }
             /* mark this sdl device as used */
             sdlDevicesUsed[sdlNumDevUsed++] = sdlCtrlIdx;
             ActiveControllers += ControllersFound;
