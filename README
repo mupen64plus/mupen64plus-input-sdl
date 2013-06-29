@@ -15,13 +15,6 @@ can be found at:
 http://mupen64plus.retrouprising.com/mediawiki/index.php?title=Mupen64Plus_Plugin_Parameters#Input-SDL
 
 -------------------------------------------------------------------------------
-ABOUT
--------------------------------------------------------------------------------
-Mupen64Plus's Rice Video plugin supports a very nice feature which allows the
-user to replace all of the original textures used for 3D rendering in a game
-with high-resolution replacement textures drawn by graphic artists.
-
--------------------------------------------------------------------------------
 Notes about usage of SDL input plugin:
 -------------------------------------------------------------------------------
 
