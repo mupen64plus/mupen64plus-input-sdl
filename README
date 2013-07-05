@@ -69,11 +69,30 @@ L3:       button(10)
 R3:       button(11)
 Note:  This is when analog mode is selected. If analog is off then D-Pad becomes axes 0/1 and both sticks are disabled (including L3/R3).
 
-6. N64 controller:
+6. Nintendo Wiimote Classic
+I am on a Mac and used https://code.google.com/p/wjoy/ successfully to connect my Wiimote + Classic Controller.
+
+This is my working Wiimote + Class Controller configuration. You use the Classic Controller for all play, the Wiimote serves only as a host for the Classic Controller. I have swapped the left analog stick set as the C-Buttons and the right analog stick set as the N64 Analog (Y-Axis / X-Axis). This makes playing FPS titles like Perfect Dark a bit more reasonable for me. You can easily switch them by swapping 2 with 4 and 3 with 5 in the axis() sections below.
+
+N64 -> Classic Controller
+Z        -> L
+R        -> R
+L        -> ZL
+A        -> A
+B        -> B
+Start    -> Start (+)
+DPad     -> DPad
+CButtons -> Left Analog
+Analog   -> Right Analog
+
+Mempak switch -> Home
+Rumblepak switch -> Select (-)
+
+7. N64 controller:
 All controls are mapped to their proper place on the N64 controller with an Adaptoid or custom hardware with Gamecon driver.
 Rumble and Memory packs can be selected with the 'r' and 'm' keys, respectively.
 
-7. Playstation 3 Controller:
+8. Playstation 3 Controller:
 Left analog stick - analog stick
 Right analog stick - C-pad
 D-Pad - D-Pad
@@ -83,7 +102,7 @@ L1 / R1 - L / R
 L2 - Z
 Start - Start
 
-8. SAITEK P880:
+9. SAITEK P880:
 The gamepad doesnt have enough keys to real assign all buttons. The second 
 analog stick can be used as button by pushing him insight.
 
@@ -96,7 +115,7 @@ used for A and B and the second and third row was used for C-Buttons - except
 for the Button next to the A button which would be C-Down but got the Z 
 button.
 
-9. Xbox Gamepad (userspace driver)
+10. Xbox Gamepad (userspace driver)
 I created an Input Config for a Xbox 360 controller running with
 xboxdrv on a Linux system (http://pingus.seul.org/~grumbel/xboxdrv/).
 
@@ -128,10 +147,10 @@ guide=KEY_ESC
 x2^deadzone:27000
 y2^deadzone:27000
 
-10. Saitek Cyborg V.3 Rumble Pad (aka Saitek PS2700)
+11. Saitek Cyborg V.3 Rumble Pad (aka Saitek PS2700)
 Honestly, it's one of the best pads that I've used in a long time, so thought I'd contribute this quick config. Basically, Dpad and Analog sticks are unchanged, C-buttons are mapped to the right analog stick, L-R triggers are L1 and R1, Z is mapped to R2, A + B are mapped to X and Square, respectively, start is mapped to the Home button, and Triangle, Square, L2, Start, Select, and the Analog triggers are unused, since it's not intuitive to use them for what's left.
 
-11. Default Keyboard interface:
+12. Default Keyboard interface:
 Analog Pad is "Arrow Keys"
 C Up/Left/Down/Right are "I", "J", "K", "L"
 DPad Up/Left/Down/Right are "W", "A", "S", "D"
