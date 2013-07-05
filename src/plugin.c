@@ -751,6 +751,9 @@ static void InitiateRumble(int cntrl)
     ffeffect[cntrl].id = -1;
     ffeffect[cntrl].u.rumble.strong_magnitude = 0xFFFF;
     ffeffect[cntrl].u.rumble.weak_magnitude = 0xFFFF;
+    ffeffect[cntrl].replay.length = 0x7fff;             // hack: xboxdrv is buggy and doesn't support infinite replay.
+                                                        // when xboxdrv is fixed (https://github.com/Grumbel/xboxdrv/issues/47),
+                                                        // please remove this
 
     ioctl(controller[cntrl].event_joystick, EVIOCSFF, &ffeffect[cntrl]);
 

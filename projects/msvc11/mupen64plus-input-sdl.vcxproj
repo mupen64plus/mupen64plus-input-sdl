@@ -97,6 +97,7 @@
     <ClCompile Include="..\..\src\config.c" />
     <ClCompile Include="..\..\src\osal_dynamiclib_win32.c" />
     <ClCompile Include="..\..\src\plugin.c" />
+    <ClCompile Include="..\..\src\sdl_key_converter.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\autoconfig.h" />
@@ -104,6 +105,7 @@
     <ClInclude Include="..\..\src\osal_dynamiclib.h" />
     <ClInclude Include="..\..\src\osal_preproc.h" />
     <ClInclude Include="..\..\src\plugin.h" />
+    <ClInclude Include="..\..\src\sdl_key_converter.h" />
     <ClInclude Include="..\..\src\version.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

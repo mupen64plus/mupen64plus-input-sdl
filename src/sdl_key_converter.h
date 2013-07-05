@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-input-sdl - version.h                                     *
+ *   Mupen64plus - sdl_key_converter.h                                     *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2009-2012 Richard Goedeken                              *
+ *   Copyright (C) 2013 Mupen64plus development team                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,19 +19,34 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/* This header file is for versioning information
- *
- */
+#include "osal_preproc.h"
+#include <SDL.h>
 
-#if !defined(VERSION_H)
-#define VERSION_H
+uint16_t sdl_keysym2scancode(uint16_t keysym);
+uint16_t sdl_scancode2keysym(uint16_t scancode);
 
-#define PLUGIN_NAME    "Mupen64Plus SDL Input Plugin"
-#define PLUGIN_VERSION           0x020000
-#define INPUT_PLUGIN_API_VERSION 0x020000
-#define CONFIG_API_VERSION       0x020100
+#if SDL_VERSION_ATLEAST(1,3,0)
 
-#define VERSION_PRINTF_SPLIT(x) (((x) >> 16) & 0xffff), (((x) >> 8) & 0xff), ((x) & 0xff)
+static osal_inline uint16_t sdl_keysym2native(uint16_t keysym)
+{
+    return sdl_keysym2scancode(keysym);
+}
 
-#endif /* #define VERSION_H */
+static osal_inline uint16_t sdl_native2keysym(uint16_t native)
+{
+    return sdl_scancode2keysym(native);
+}
 
+#else
+
+static osal_inline uint16_t sdl_keysym2native(uint16_t keysym)
+{
+    return keysym;
+}
+
+static osal_inline uint16_t sdl_native2keysym(uint16_t native)
+{
+    return native;
+}
+
+#endif
