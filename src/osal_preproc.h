@@ -30,4 +30,16 @@
   #define strcasecmp _stricmp
 #endif // WIN32
 
+#if defined(WIN32) && !defined(__MINGW32__)
+
+  // macros
+  #define osal_inline __inline
+
+#else  /* Not WIN32 */
+
+  // macros
+  #define osal_inline inline
+
+#endif
+
 #endif // OSAL_PREPROC_H

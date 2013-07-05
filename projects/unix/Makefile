@@ -117,7 +117,7 @@ endif
 # base CFLAGS, LDLIBS, and LDFLAGS
 OPTFLAGS ?= -O3 -flto
 WARNFLAGS ?= -Wall
-CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src
+CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -D_GNU_SOURCE=1
 LDFLAGS += $(SHARED)
 
 # Since we are building a shared library, we must compile with -fPIC on some architectures
@@ -256,6 +256,7 @@ OBJDIR = _obj$(POSTFIX)
 SOURCE = \
 	$(SRCDIR)/plugin.c \
 	$(SRCDIR)/autoconfig.c \
+	$(SRCDIR)/sdl_key_converter.c \
 	$(SRCDIR)/config.c
 
 ifeq ($(OS),MINGW)
