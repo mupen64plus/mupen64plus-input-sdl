@@ -195,6 +195,10 @@
 				RelativePath="..\..\src\plugin.c"
 				>
 			</File>
+			<File
+				RelativePath="..\..\src\sdl_key_converter.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -219,6 +223,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\plugin.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\sdl_key_converter.h"
 				>
 			</File>
 			<File
