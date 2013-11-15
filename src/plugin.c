@@ -612,27 +612,27 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 }
 #endif
             }
+            axis_val = mousex_residual;
+            if (axis_val < -80)
+                axis_val = -80;
+            else if (axis_val > 80)
+                axis_val = 80;
+            controller[Control].buttons.X_AXIS = axis_val;
+            axis_val = mousey_residual;
+            if (axis_val < -80)
+                axis_val = -80;
+            else if (axis_val > 80)
+                axis_val = 80;
+            controller[Control].buttons.Y_AXIS = -axis_val;
+            /* the mouse x/y values decay exponentially */
+            mousex_residual = (mousex_residual * 224) / 256;
+            mousey_residual = (mousey_residual * 224) / 256;
         }
         else
         {
             mousex_residual = 0;
             mousey_residual = 0;
         }
-        axis_val = mousex_residual;
-        if (axis_val < -80)
-            axis_val = -80;
-        else if (axis_val > 80)
-            axis_val = 80;
-        controller[Control].buttons.X_AXIS = axis_val;
-        axis_val = mousey_residual;
-        if (axis_val < -80)
-            axis_val = -80;
-        else if (axis_val > 80)
-            axis_val = 80;
-        controller[Control].buttons.Y_AXIS = -axis_val;
-        /* the mouse x/y values decay exponentially */
-        mousex_residual = (mousex_residual * 224) / 256;
-        mousey_residual = (mousey_residual * 224) / 256;
     }
 
 #ifdef _DEBUG
