@@ -43,11 +43,33 @@ The bottom shoulder buttons select the memory pack or rumble pak.
 I came up with what I see as one of the few decent configurations (SSB aside) since it allows access to everything but the dpad.
 A is L1, B is R1, Z is L2, R is R2, L is select. C buttons are the four buttons, and the dpad acts as the joystick. Not the most orthodox, but it works well.
 
-4. Microsoft X-Box 360 pad:
-C button U (up) and C button R (right) are assigned to the Y and B buttons.
-All 4 C buttons are assigned to the U and V axis (including the already configured up and right C buttons).
-The Z button has been assigned to the left trigger and switching the rumble on and off can be done with the right trigger.
-Because there are no other buttons left I decided to use the button click behavior of the left joystick to switch Mempak on and off.
+4. Microsoft Xbox 360 controller and clones:
+
+N64          -> Xbox 360:
+
+analog stick -> left stick
+digital pad  -> directional pad
+R            -> right bumper, right trigger
+L            -> left bumper
+Z            -> left trigger
+A            -> A
+B            -> X
+start        -> start
+C buttons    -> right stick
+C left       -> Y (additionally to right stick)
+C down       -> B (additionally to right stick)
+
+mempak       -> none for now
+rumblepak    -> none for now
+
+As discussed in issue #478 Xbox 360 controllers should follow the above
+mapping convention. If you want to add a Xbox 360 controller clone please
+stick to it. As your clone might has different button naming, you can find
+Xbox 360 controller button names at
+https://en.wikipedia.org/wiki/File:360_controller.svg
+
+Keys that are still unbound are back (aka. select) and left/right stick button
+clicks. Those might be used for mempack and rumblepak toggles.
 
 5. MP-8866 Dual USB Joypad:
 This is a USB adapter for PlayStation controllers (2).
