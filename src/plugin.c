@@ -625,8 +625,12 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 axis_val = 80;
             controller[Control].buttons.Y_AXIS = -axis_val;
             /* the mouse x/y values decay exponentially */
-            mousex_residual = (mousex_residual * 224) / 256;
-            mousey_residual = (mousey_residual * 224) / 256;
+            if (!myKeyState[SDLK_LSUPER]) /*So That FPS game can be easily played without cursor trying to return to 
+            origin (0,0). To do this press left Win.*/
+            {
+                mousex_residual = (mousex_residual * 224) / 256;
+                mousey_residual = (mousey_residual * 224) / 256;
+            }
         }
         else
         {
