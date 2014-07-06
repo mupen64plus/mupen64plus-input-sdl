@@ -184,4 +184,10 @@ B is "left control"
 Select Mempack = ","
 Select Rumblepack = "."
 
+13. Special modifier keys
+ - Right-shift key: reduce amplitude of analog joystick X/Y axes by 25%
+ - Right-control key: reduce amplitude of analog joystick X/Y axes by 50%
+ - Left-Control + Left-Alt keys: grab or un-grab the mouse cursor (only if mouse control is enabled)
+ - Left-Windows key: do not auto-center joystick X/Y axes (only when mouse control is enabled)
+
 
