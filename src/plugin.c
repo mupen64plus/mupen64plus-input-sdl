@@ -625,7 +625,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 axis_val = 80;
             controller[Control].buttons.Y_AXIS = -axis_val;
             /* the mouse x/y values decay exponentially (returns to center), unless the left "Windows" key is held down */
-            if (!myKeyState[SDLK_LSUPER])
+            if (!myKeyState[SDL_SCANCODE_LGUI])
             {
                 mousex_residual = (mousex_residual * 224) / 256;
                 mousey_residual = (mousey_residual * 224) / 256;
