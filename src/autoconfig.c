@@ -212,6 +212,12 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
     fseek(pfIn, 0L, SEEK_END);
     iniLength = ftell(pfIn);
     fseek(pfIn, 0L, SEEK_SET);
+    if (iniLength < 0) {
+        DebugMessage(M64MSG_ERROR, "Couldn't get size of config file '%s'", CfgFilePath);
+        fclose(pfIn);
+        return 0;
+    }
+
     pchIni = (char *) malloc(iniLength + 1);
     if (pchIni == NULL)
     {
