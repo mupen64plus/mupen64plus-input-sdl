@@ -255,7 +255,7 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
 
 /* Helper function to handle the SDL keys */
 static void
-doSdlKeys(unsigned char* keystate)
+doSdlKeys(const unsigned char* keystate)
 {
     int c, b, axis_val, axis_max_val;
     static int grabmouse = 1, grabtoggled = 0;
