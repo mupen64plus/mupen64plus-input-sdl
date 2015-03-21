@@ -22,16 +22,14 @@
 #include <SDL.h>
 
 #define M64P_PLUGIN_PROTOTYPES 1
-#include "m64p_types.h"
-#include "m64p_plugin.h"
-#include "m64p_config.h"
-
-#include "osal_preproc.h"
 #include "autoconfig.h"
+#include "config.h"
+#include "m64p_config.h"
+#include "m64p_plugin.h"
+#include "m64p_types.h"
+#include "osal_preproc.h"
 #include "plugin.h"
 #include "sdl_key_converter.h"
-
-#include "config.h"
 
 #define HAT_POS_NAME( hat )         \
        ((hat == SDL_HAT_UP) ? "Up" :        \

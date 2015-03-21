@@ -67,8 +67,8 @@ static inline const char* _SDL_JoystickName(int device_index)
 #endif
 
 #define M64P_PLUGIN_PROTOTYPES 1
-#include "m64p_plugin.h"
 #include "m64p_config.h"
+#include "m64p_plugin.h"
 
 #define DEVICE_NO_JOYSTICK  (-1)
 
