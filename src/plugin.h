@@ -25,6 +25,7 @@
 #define __PLUGIN_H__
 
 #include <SDL.h>
+#include <string.h>
 #if ! SDL_VERSION_ATLEAST(1,3,0)
 
 #define SDL_GetKeyboardState SDL_GetKeyState

@@ -20,6 +20,8 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <SDL.h>
+#include <stdio.h>
+#include <string.h>
 
 #define M64P_PLUGIN_PROTOTYPES 1
 #include "autoconfig.h"
