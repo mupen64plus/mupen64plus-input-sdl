@@ -21,28 +21,27 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <SDL.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <SDL.h>
-
 #define M64P_PLUGIN_PROTOTYPES 1
-#include "m64p_types.h"
-#include "m64p_plugin.h"
+#include "config.h"
 #include "m64p_common.h"
 #include "m64p_config.h"
-
-#include "plugin.h"
-#include "config.h"
-#include "version.h"
+#include "m64p_plugin.h"
+#include "m64p_types.h"
 #include "osal_dynamiclib.h"
+#include "plugin.h"
+#include "version.h"
 
 #ifdef __linux__
-#include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <linux/input.h>
 #endif /* __linux__ */
 

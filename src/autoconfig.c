@@ -19,12 +19,14 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "m64p_types.h"
-#include "m64p_config.h"
-#include "osal_preproc.h"
 #include "autoconfig.h"
+#include "m64p_config.h"
+#include "m64p_types.h"
+#include "osal_preproc.h"
 #include "plugin.h"
 
 /* local definitions */
