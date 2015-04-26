@@ -1,6 +1,16 @@
 SDL Input plugin for Mupen64Plus
 --------------------------------
 
+Mupen64Plus-input-sdl v2.5 - April 26, 2015
+-------------------------------------------
+ - use SDL1.2 keysyms in the mupen64plus.cfg file Input section even when built against SDL2, with keysym converter
+ - SDL2: support for mapping mouse to controller analog x/y
+ - SDL2: improve/simplify rumble effect code
+ - use prioritization to decide among multiple matching auto-config sections (for SDL2 / XInput)
+ - New auto-config sections for: Wiimote Classic, Wii U Gamecube / Pro, MS SideWinder GamePad Pro, 17 others
+ - When Mouse=True but pointer is un-grabbed, fall back to joystick settings for analog x/y
+ - Prevent mouse/trackpad auto-centering behavior by pressing left-Windows key
+
 Mupen64Plus-input-sdl v2.0 - July 4, 2013
 -----------------------------------------
  - re-write auto-configuration logic to be more user friendly.  Add new 'mode' parameter.
