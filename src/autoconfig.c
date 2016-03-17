@@ -155,9 +155,18 @@ static int auto_compare_name(const char *joySDLName, char *line)
     }
 #endif
 #endif
+    /* extra points if the section name is a perfect match */
+    if (strcmp(wordPtr, joySDLName) == 0)
+        joyFoundScore += 4;
     /* search in the .ini device name for all the words in the joystick name.  If any are missing, then this is not the right joystick model */
     while (wordPtr != NULL && strlen(wordPtr) > 0)
     {
+        /* skip over any preceding spaces */
+        while (*wordPtr == ' ')
+            wordPtr++;
+        if (*wordPtr == 0)
+            break;
+        /* search for the next space after the current word */
         char *nextSpace = strchr(wordPtr, ' ');
         if (nextSpace == NULL)
         {
