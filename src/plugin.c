@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #define M64P_PLUGIN_PROTOTYPES 1
 #include "config.h"
@@ -455,6 +456,29 @@ EXPORT void CALL ControllerCommand(int Control, unsigned char *Command)
         }
 }
 
+static double vlen(double x, double y) {
+  return sqrt(x*x + y*y);
+}
+
+static void square_to_circle(double* x, double* y) {
+  double xx = *x;
+  double yy = *y;
+  double maxlen;
+
+  if (fabs(xx) > fabs(yy)) {
+    maxlen = vlen(80, yy * 80. / fabs(xx));
+  }
+  else {
+    maxlen = vlen(xx * 80. / fabs(yy), 80);
+  }
+
+  maxlen = 80. / maxlen;
+  xx *= maxlen;
+  yy *= maxlen;
+  *x = xx;
+  *y = yy;
+}
+
 /******************************************************************
   Function: GetKeys
   Purpose:  To get the current state of the controllers buttons.
@@ -558,6 +582,24 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 controller[Control].buttons.X_AXIS = axis_val;
             else
                 controller[Control].buttons.Y_AXIS = -axis_val;
+        }
+
+
+        if (abs(controller[Control].buttons.X_AXIS) < 80 &&
+            abs(controller[Control].buttons.Y_AXIS) < 80)
+        {
+                double x = controller[Control].buttons.X_AXIS;
+                double y = controller[Control].buttons.Y_AXIS;
+
+                if (x && fabs(x) < 10)
+                        x = 10 * x / fabs(x);
+                if (y && fabs(y) < 10)
+                        y = 10 * y / fabs(y);
+
+                square_to_circle(&x, &y);
+
+                controller[Control].buttons.X_AXIS = x;
+                controller[Control].buttons.Y_AXIS = y;
         }
     }
 
