@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #define M64P_PLUGIN_PROTOTYPES 1
 #include "config.h"
@@ -250,6 +251,47 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
     }
                     
     return M64ERR_SUCCESS;
+}
+
+/* Helper function to enforce a limit function on the joystick coordinates which
+   was empirically derived from the physical limits on a real N64 controller */
+static void ApplyAxisLimits(int *piX, int *piY)
+{
+    // normalize the integer coordinates to 0-1, and calculate the radius
+    float fX = *piX / 80.0f;
+    float fY = *piY / 80.0f;
+    float fR = sqrtf(fX*fX + fY*fY);
+    
+    // if we're not near the radius limit, leave the X/Y coords alone
+    if (fR < 0.85)
+        return;
+    
+    // calculate the angle in octants (8.0 == full circle)
+    float fAngle;
+    if (fY >= 0)
+        fAngle = acosf(fX/fR);
+    else
+        fAngle = 3.14159265f + acosf(-fX/fR);
+    float fOctAngle = fAngle * 4.0f / 3.14159265f;
+    
+    // decompose this angle into an integer octant number (0-7) and fractional remainder [0.0,1.0)
+    int iOct = (int) floorf(fOctAngle);
+    float fRem = fOctAngle - iOct;
+    
+    // calculate the maximum radius for the given angle of the joystick position
+    float fMaxRadius = 0.0f;
+    if ((iOct & 1) == 0)
+        fMaxRadius = 0.250f * fRem * fRem - 0.115f * fRem + 0.867;
+    else
+        fMaxRadius = 0.228f * fRem * fRem - 0.361f * fRem + 1.000;
+    
+    // downscale the radius to the maximum if necessary, keeping the angle the same
+    if (fR > fMaxRadius)
+    {
+        float fScale = fMaxRadius / fR;
+        *piX = (int) (*piX * fScale);
+        *piY = (int) (*piY * fScale);
+    }
 }
 
 /* Helper function to handle the SDL keys */
@@ -505,6 +547,8 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                         controller[Control].buttons.Value |= button_bits[b];
             }
         }
+        int iX = controller[Control].buttons.X_AXIS;
+        int iY = controller[Control].buttons.Y_AXIS;
         for( b = 0; b < 2; b++ )
         {
             /* from the N64 func ref: The 3D Stick data is of type signed char and in the range between -80 and +80 */
@@ -515,9 +559,9 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 continue;
 
             if( b == 0 )
-                axis_val = controller[Control].buttons.X_AXIS;
+                axis_val = iX;
             else
-                axis_val = -controller[Control].buttons.Y_AXIS;
+                axis_val = -iY;
 
             if( controller[Control].axis[b].axis_a >= 0 )  /* up and left for N64 */
             {
@@ -525,8 +569,6 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 int axis_dir = controller[Control].axis[b].axis_dir_a;
                 if (joy_val * axis_dir > deadzone)
                     axis_val = -((abs(joy_val) - deadzone) * 80 / range);
-                if (axis_val < -80)
-                    axis_val = -80;
             }
             if( controller[Control].axis[b].axis_b >= 0 ) /* down and right for N64 */
             {
@@ -534,8 +576,6 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 int axis_dir = controller[Control].axis[b].axis_dir_b;
                 if (joy_val * axis_dir > deadzone)
                     axis_val = ((abs(joy_val) - deadzone) * 80 / range);
-                if (axis_val > 80)
-                    axis_val = 80;
             }
             if( controller[Control].axis[b].hat >= 0 )
             {
@@ -555,10 +595,14 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                     axis_val = 80;
 
             if( b == 0 )
-                controller[Control].buttons.X_AXIS = axis_val;
+                iX = axis_val;
             else
-                controller[Control].buttons.Y_AXIS = -axis_val;
+                iY = -axis_val;
         }
+        /* apply axis limit to joystick position and store the result */
+        ApplyAxisLimits(&iX, &iY);
+        controller[Control].buttons.X_AXIS = iX;
+        controller[Control].buttons.Y_AXIS = iY;
     }
 
     // process mouse events
@@ -611,18 +655,14 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 }
 #endif
             }
-            axis_val = mousex_residual;
-            if (axis_val < -80)
-                axis_val = -80;
-            else if (axis_val > 80)
-                axis_val = 80;
-            controller[Control].buttons.X_AXIS = axis_val;
-            axis_val = mousey_residual;
-            if (axis_val < -80)
-                axis_val = -80;
-            else if (axis_val > 80)
-                axis_val = 80;
-            controller[Control].buttons.Y_AXIS = -axis_val;
+
+            /* apply axis limit to joystick position and store the result */
+            int iX = mousex_residual;
+            int iY = -mousey_residual;
+            ApplyAxisLimits(&iX, &iY);
+            controller[Control].buttons.X_AXIS = iX;
+            controller[Control].buttons.Y_AXIS = iY;
+
             /* the mouse x/y values decay exponentially (returns to center), unless the left "Windows" key is held down */
             if (!myKeyState[SDL_SCANCODE_LGUI])
             {
