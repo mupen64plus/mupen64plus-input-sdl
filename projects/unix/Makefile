@@ -138,7 +138,11 @@ endif
 
 # test for presence of SDL
 ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
-  SDL_CONFIG = $(CROSS_COMPILE)sdl2-config
+  ifeq ("$(SDL)", "1.2")
+    SDL_CONFIG = $(CROSS_COMPILE)sdl-config
+  else
+    SDL_CONFIG = $(CROSS_COMPILE)sdl2-config
+  endif
   ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
     SDL_CONFIG = $(CROSS_COMPILE)sdl-config
     ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
@@ -254,6 +258,7 @@ targets:
 	@echo "  Options:"
 	@echo "    BITS=32       == build 32-bit binaries on 64-bit machine"
 	@echo "    APIDIR=path   == path to find Mupen64Plus Core headers"
+	@echo "    SDL=(1.2|2.0) == SDL library to use (default: 2.0)"
 	@echo "    OPTFLAGS=flag == compiler optimization (default: -O3 -flto)"
 	@echo "    WARNFLAGS=flag == compiler warning levels (default: -Wall)"
 	@echo "    PIC=(1|0)     == Force enable/disable of position independent code"
