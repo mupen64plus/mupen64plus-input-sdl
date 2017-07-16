@@ -309,7 +309,7 @@ int auto_set_defaults(int iDeviceIdx, const char *joySDLName)
             *pivot++ = 0;
             pchCurLine = StripSpace(pchCurLine);
             pivot = StripSpace(pivot);
-            if (strcasecmp(pchCurLine, "plugin") == 0 || strcasecmp(pchCurLine, "device") == 0)
+            if (strcasecmp(pchCurLine, "device") == 0)
             {
                 int iVal = atoi(pivot);
                 ConfigSetParameter(pConfig, pchCurLine, M64TYPE_INT, &iVal);

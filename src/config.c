@@ -89,7 +89,7 @@ static void clear_controller(int iCtrlIdx)
     controller[iCtrlIdx].device = DEVICE_NO_JOYSTICK;
     controller[iCtrlIdx].control->Present = 0;
     controller[iCtrlIdx].control->RawData = 0;
-    controller[iCtrlIdx].control->Plugin = PLUGIN_NONE;
+    controller[iCtrlIdx].control->Plugin = PLUGIN_MEMPAK;
     for( b = 0; b < 16; b++ )
     {
         controller[iCtrlIdx].button[b].button = -1;
@@ -197,16 +197,11 @@ static int load_controller_config(const char *SectionName, int i, int sdlDeviceI
     /* set SDL device number */
     controller[i].device = sdlDeviceIdx;
 
-    /* throw warnings if 'plugged' or 'plugin' are missing */
+    /* throw warnings if 'plugged' is missing */
     if (ConfigGetParameter(pConfig, "plugged", M64TYPE_BOOL, &controller[i].control->Present, sizeof(int)) != M64ERR_SUCCESS)
     {
         DebugMessage(M64MSG_WARNING, "missing 'plugged' parameter from config section %s. Setting to 1 (true).", SectionName);
         controller[i].control->Present = 1;
-    }
-    if (ConfigGetParameter(pConfig, "plugin", M64TYPE_INT, &controller[i].control->Plugin, sizeof(int)) != M64ERR_SUCCESS)
-    {
-        DebugMessage(M64MSG_WARNING, "missing 'plugin' parameter from config section %s. Setting to 1 (none).", SectionName);
-        controller[i].control->Plugin = PLUGIN_NONE;
     }
     /* load optional parameters */
     ConfigGetParameter(pConfig, "mouse", M64TYPE_BOOL, &controller[i].mouse, sizeof(int));
@@ -334,7 +329,7 @@ static void init_controller_config(int iCtrlIdx, const char *pccDeviceName, eMod
     ConfigSetDefaultInt(pConfig, "device", controller[iCtrlIdx].device, "Specifies which joystick is bound to this controller: -1=No joystick, 0 or more= SDL Joystick number");
     ConfigSetDefaultString(pConfig, "name", pccDeviceName, "SDL joystick name (or Keyboard)");
     ConfigSetDefaultBool(pConfig, "plugged", controller[iCtrlIdx].control->Present, "Specifies whether this controller is 'plugged in' to the simulated N64");
-    ConfigSetDefaultInt(pConfig, "plugin", controller[iCtrlIdx].control->Plugin, "Specifies which type of expansion pak is in the controller: 1=None, 2=Mem pak, 5=Rumble pak");
+    ConfigSetDefaultInt(pConfig, "plugin", controller[iCtrlIdx].control->Plugin, "Specifies which type of expansion pak is in the controller: 1=None, 2=Mem pak, 4=Transfer pak, 5=Rumble pak");
     ConfigSetDefaultBool(pConfig, "mouse", controller[iCtrlIdx].mouse, "If True, then mouse buttons may be used with this controller");
 
     sprintf(Param, "%.2f,%.2f", controller[iCtrlIdx].mouse_sens[0], controller[iCtrlIdx].mouse_sens[1]);
@@ -605,6 +600,11 @@ void load_configuration(int bPreConfig)
             if (ConfigGetParameter(pConfig, "name", M64TYPE_STRING, DeviceName[n64CtrlIdx], 256) != M64ERR_SUCCESS)
             {
                 DeviceName[n64CtrlIdx][0] = 0;
+            }
+            if (ConfigGetParameter(pConfig, "plugin", M64TYPE_INT, &controller[n64CtrlIdx].control->Plugin, sizeof(int)) != M64ERR_SUCCESS)
+            {
+                DebugMessage(M64MSG_WARNING, "missing 'plugin' parameter from config section %s. Setting to 2 (mempak).", SectionName);
+                controller[n64CtrlIdx].control->Plugin = PLUGIN_MEMPAK;
             }
         }
     }
