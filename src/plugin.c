@@ -253,6 +253,7 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
     return M64ERR_SUCCESS;
 }
 
+#if 0
 /* Helper function to enforce a limit function on the joystick coordinates which
    was empirically derived from the physical limits on a real N64 controller */
 static void ApplyAxisLimits(int *piX, int *piY)
@@ -293,6 +294,20 @@ static void ApplyAxisLimits(int *piX, int *piY)
         *piY = (int) (*piY * fScale);
     }
 }
+#else
+static void ApplyAxisLimits(int *piX, int *piY)
+{
+    if (*piX < -80)
+        *piX = -80;
+    else if (*piX > 80)
+        *piX = 80;
+
+    if (*piY < -80)
+        *piY = -80;
+    else if (*piY > 80)
+        *piY = 80;
+}
+#endif
 
 /* Helper function to handle the SDL keys */
 static void
@@ -568,14 +583,14 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 int joy_val = SDL_JoystickGetAxis(controller[Control].joystick, controller[Control].axis[b].axis_a);
                 int axis_dir = controller[Control].axis[b].axis_dir_a;
                 if (joy_val * axis_dir > deadzone)
-                    axis_val = -((abs(joy_val) - deadzone) * 80 / range);
+                    axis_val = -round((abs(joy_val) - deadzone) * 80.0 / range);
             }
             if( controller[Control].axis[b].axis_b >= 0 ) /* down and right for N64 */
             {
                 int joy_val = SDL_JoystickGetAxis(controller[Control].joystick, controller[Control].axis[b].axis_b);
                 int axis_dir = controller[Control].axis[b].axis_dir_b;
                 if (joy_val * axis_dir > deadzone)
-                    axis_val = ((abs(joy_val) - deadzone) * 80 / range);
+                    axis_val = round((abs(joy_val) - deadzone) * 80.0 / range);
             }
             if( controller[Control].axis[b].hat >= 0 )
             {
