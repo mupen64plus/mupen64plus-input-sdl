@@ -279,18 +279,14 @@ static void ApplyAxisLimits(int *piX, int *piY)
     float fRem = fOctAngle - iOct;
     
     // calculate the maximum radius for the given angle of the joystick position
-    float fMaxRadius = 0.0f;
-    if ((iOct & 1) == 0)
-        fMaxRadius = 0.250f * fRem * fRem - 0.115f * fRem + 0.867;
-    else
-        fMaxRadius = 0.228f * fRem * fRem - 0.361f * fRem + 1.000;
+    float fMaxRadius = 0.250f * fRem * fRem - 0.250f * fRem + 1.000f;
     
     // downscale the radius to the maximum if necessary, keeping the angle the same
     if (fR > fMaxRadius)
     {
         float fScale = fMaxRadius / fR;
-        *piX = (int) (*piX * fScale);
-        *piY = (int) (*piY * fScale);
+        *piX = (int) roundf(*piX * fScale);
+        *piY = (int) roundf(*piY * fScale);
     }
 }
 
