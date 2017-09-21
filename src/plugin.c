@@ -513,6 +513,19 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     doSdlKeys(SDL_GetKeyboardState(NULL));
     doSdlKeys(myKeyState);
 
+    for ( b = 0; b < 4; ++b )
+    {
+        if (controller[b].device >= 0)
+        {
+#if SDL_VERSION_ATLEAST(2,0,0)
+            if (!SDL_JoystickGetAttached(controller[b].joystick))
+#else
+            if (!SDL_JoystickOpened(controller[b].device))
+#endif
+                controller[b].joystick = SDL_JoystickOpen(controller[b].device);
+        }
+    }
+    
     // read joystick state
     SDL_JoystickUpdate();
 
