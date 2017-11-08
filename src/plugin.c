@@ -253,43 +253,6 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
     return M64ERR_SUCCESS;
 }
 
-/* Helper function to enforce a limit function on the joystick coordinates which
-   was empirically derived from the physical limits on a real N64 controller */
-static void ApplyAxisLimits(int *piX, int *piY)
-{
-    // normalize the integer coordinates to 0-1, and calculate the radius
-    float fX = *piX / 80.0f;
-    float fY = *piY / 80.0f;
-    float fR = sqrtf(fX*fX + fY*fY);
-    
-    // if we're not near the radius limit, leave the X/Y coords alone
-    if (fR < 0.85)
-        return;
-    
-    // calculate the angle in octants (8.0 == full circle)
-    float fAngle;
-    if (fY >= 0)
-        fAngle = acosf(fX/fR);
-    else
-        fAngle = 3.14159265f + acosf(-fX/fR);
-    float fOctAngle = fAngle * 4.0f / 3.14159265f;
-    
-    // decompose this angle into an integer octant number (0-7) and fractional remainder [0.0,1.0)
-    int iOct = (int) floorf(fOctAngle);
-    float fRem = fOctAngle - iOct;
-    
-    // calculate the maximum radius for the given angle of the joystick position
-    float fMaxRadius = 0.250f * fRem * fRem - 0.250f * fRem + 1.000f;
-    
-    // downscale the radius to the maximum if necessary, keeping the angle the same
-    if (fR > fMaxRadius)
-    {
-        float fScale = fMaxRadius / fR;
-        *piX = (int) roundf(*piX * fScale);
-        *piY = (int) roundf(*piY * fScale);
-    }
-}
-
 /* Helper function to handle the SDL keys */
 static void
 doSdlKeys(const unsigned char* keystate)
@@ -608,8 +571,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
             else
                 iY = -axis_val;
         }
-        /* apply axis limit to joystick position and store the result */
-        ApplyAxisLimits(&iX, &iY);
+        /* store the result */
         controller[Control].buttons.X_AXIS = iX;
         controller[Control].buttons.Y_AXIS = iY;
     }
@@ -665,10 +627,9 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
 #endif
             }
 
-            /* apply axis limit to joystick position and store the result */
+            /* store the result */
             int iX = mousex_residual;
             int iY = -mousey_residual;
-            ApplyAxisLimits(&iX, &iY);
             controller[Control].buttons.X_AXIS = iX;
             controller[Control].buttons.Y_AXIS = iY;
 
