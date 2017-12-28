@@ -1,18 +1,19 @@
 ===============================================================================
 -------------------------------------------------------------------------------
+https://mupen64plus.org/wiki/index.php/ControllerSetup
 Mupen64plus-input-sdl README                                               v2.0
 -------------------------------------------------------------------------------
 ===============================================================================
 
 The latest documentation for this plugin can be found in wiki format at:
 
-https://code.google.com/p/mupen64plus/wiki/KeyboardSetup
-https://code.google.com/p/mupen64plus/wiki/ControllerSetup
+https://mupen64plus.org/wiki/index.php/KeyboardSetup
+https://mupen64plus.org/wiki/index.php/ControllerSetup
 
 The format and usage of this plugin's "mupen64plus.cfg" configuration options
 can be found at:
 
-http://mupen64plus.retrouprising.com/mediawiki/index.php?title=Mupen64Plus_Plugin_Parameters#Input-SDL
+https://mupen64plus.org/wiki/index.php/Mupen64Plus_Plugin_Parameters#Input-SDL
 
 -------------------------------------------------------------------------------
 Notes about usage of SDL input plugin:
