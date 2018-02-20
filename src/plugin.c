@@ -488,9 +488,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 controller[b].joystick = SDL_JoystickOpen(controller[b].device);
         }
     }
-
-    controller[Control].control->Present = (controller[Control].joystick != NULL);
-
+    
     // read joystick state
     SDL_JoystickUpdate();
 
