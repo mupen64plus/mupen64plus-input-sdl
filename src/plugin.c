@@ -471,6 +471,8 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     int b, axis_val;
     SDL_Event event;
     unsigned char mstate;
+    
+    SDL_PumpEvents();
 
     // Handle keyboard input first
     doSdlKeys(SDL_GetKeyboardState(NULL));
@@ -594,7 +596,6 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
         if (SDL_WM_GrabInput(SDL_GRAB_QUERY) == SDL_GRAB_ON)
 #endif
         {
-            SDL_PumpEvents();
 #if SDL_VERSION_ATLEAST(1,3,0)
             while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) == 1)
 #else
