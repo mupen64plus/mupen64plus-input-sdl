@@ -3,7 +3,6 @@ project(mupen64plus-input-sdl)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(M64_APIDIR "${CMAKE_SOURCE_DIR}/../mupen64plus-core/src/api")
-option(UseOnScreenDisplay "UseOnScreenDisplay" ON)
 
 # State directories for modules and binaries
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
