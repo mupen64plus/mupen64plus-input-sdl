@@ -1,9 +1,7 @@
-===============================================================================
--------------------------------------------------------------------------------
-https://mupen64plus.org/wiki/index.php/ControllerSetup
-Mupen64plus-input-sdl README                                               v2.0
--------------------------------------------------------------------------------
-===============================================================================
+![Logo](https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Mupen64plus.svg/127px-Mupen64plus.svg.png)
+
+# https://mupen64plus.org/wiki/index.php/ControllerSetup
+# Mupen64plus-input-sdl README                                               v2.0
 
 The latest documentation for this plugin can be found in wiki format at:
 
@@ -15,9 +13,7 @@ can be found at:
 
 https://mupen64plus.org/wiki/index.php/Mupen64Plus_Plugin_Parameters#Input-SDL
 
--------------------------------------------------------------------------------
-Notes about usage of SDL input plugin:
--------------------------------------------------------------------------------
+## Notes about usage of SDL input plugin:
 
  - If one of the enabled controllers has the "mouse" general-purpose config parameters set
    to True, the plugin will hide the mouse cursor and 'grab' the mouse pointer.  The user
@@ -26,26 +22,25 @@ Notes about usage of SDL input plugin:
    being pressed all the way to the edge.  To decrease the amount of simulated joystick
    deflection, the user may press Right Control, Right Shift, or Right Ctrl+Right Shift.
 
--------------------------------------------------------------------------------
-Notes for supported joysticks for auto-configuration:
--------------------------------------------------------------------------------
+## Notes for supported joysticks for auto-configuration:
 
-1. Jess Tech Rumble Pad (Saitek Rumble)
+1) Jess Tech Rumble Pad (Saitek Rumble)
 The left D-pad is mapped to the D-pad; The joystick is mapped to the left joystick of the gamepad; the C buttons are mapped to the gampad's right joystick. Start button is mapped to start; the A-button is mapped to the lowest button on the gamepad's right front; the B-button to the left button (buttons marked 3 and 1 on my gamepad). The L and R buttons are mapped to the lower left and right rear triggers; the Z button is mapped to the left upper rear trigger. All other buttons are unused. 
 
-2. Logitech Dual Action gamepad, Logitech Cordless Rumblepad 2:
+2) Logitech Dual Action gamepad, Logitech Cordless Rumblepad 2:
 The digital pad maps to the N64 d-pad.  The left analog stick maps to the N64 analog stick.
 The right analog stick maps to the C-buttons,  and the buttons 2 and 1 map to A and B.
 Button 4 is the Z trigger, and the top shoulder buttons map to the left and right N64 triggers.
 Button 10 is the start button.
 The bottom shoulder buttons select the memory pack or rumble pak.
 
-3. Logitech Logitech(R) Precision(TM) Gamepad, Gravis GamePad Pro USB
+3) Logitech Logitech(R) Precision(TM) Gamepad, Gravis GamePad Pro USB
 I came up with what I see as one of the few decent configurations (SSB aside) since it allows access to everything but the dpad.
 A is L1, B is R1, Z is L2, R is R2, L is select. C buttons are the four buttons, and the dpad acts as the joystick. Not the most orthodox, but it works well.
 
-4. Microsoft Xbox 360 controller and clones:
+4) Microsoft Xbox 360 controller and clones:
 
+```
 N64          -> Xbox 360:
 
 analog stick -> left stick
@@ -62,6 +57,7 @@ C down       -> B (additionally to right stick)
 
 mempak       -> none for now
 rumblepak    -> none for now
+```
 
 As discussed in issue #478 Xbox 360 controllers should follow the above
 mapping convention. If you want to add a Xbox 360 controller clone please
@@ -72,9 +68,10 @@ https://en.wikipedia.org/wiki/File:360_controller.svg
 Keys that are still unbound are back (aka. select) and left/right stick button
 clicks. Those might be used for mempack and rumblepak toggles.
 
-5. MP-8866 Dual USB Joypad:
+5) MP-8866 Dual USB Joypad:
 This is a USB adapter for PlayStation controllers (2).
 
+```
 D-Pad:    hat(0)
 L-Stick:  x:0, y:1
 R-Stick:  x:2, y:3
@@ -91,12 +88,14 @@ Select:   button(9)
 L3:       button(10)
 R3:       button(11)
 Note:  This is when analog mode is selected. If analog is off then D-Pad becomes axes 0/1 and both sticks are disabled (including L3/R3).
+```
 
-6. Nintendo Wiimote Classic
+6) Nintendo Wiimote Classic
 I am on a Mac and used https://code.google.com/p/wjoy/ successfully to connect my Wiimote + Classic Controller.
 
 This is my working Wiimote + Class Controller configuration. You use the Classic Controller for all play, the Wiimote serves only as a host for the Classic Controller. I have swapped the left analog stick set as the C-Buttons and the right analog stick set as the N64 Analog (Y-Axis / X-Axis). This makes playing FPS titles like Perfect Dark a bit more reasonable for me. You can easily switch them by swapping 2 with 4 and 3 with 5 in the axis() sections below.
 
+```
 N64 -> Classic Controller
 Z        -> L
 R        -> R
@@ -110,12 +109,15 @@ Analog   -> Right Analog
 
 Mempak switch -> Home
 Rumblepak switch -> Select (-)
+```
 
-7. N64 controller:
+7) N64 controller:
 All controls are mapped to their proper place on the N64 controller with an Adaptoid or custom hardware with Gamecon driver.
 Rumble and Memory packs can be selected with the 'r' and 'm' keys, respectively.
 
-8. Playstation 3 Controller:
+8) Playstation 3 Controller:
+
+```
 Left analog stick - analog stick
 Right analog stick - C-pad
 D-Pad - D-Pad
@@ -124,8 +126,9 @@ Square - B
 L1 / R1 - L / R
 L2 - Z
 Start - Start
+```
 
-9. SAITEK P880:
+9) SAITEK P880:
 The gamepad doesnt have enough keys to real assign all buttons. The second 
 analog stick can be used as button by pushing him insight.
 
@@ -138,14 +141,16 @@ used for A and B and the second and third row was used for C-Buttons - except
 for the Button next to the A button which would be C-Down but got the Z 
 button.
 
-10. Xbox Gamepad (userspace driver)
+10) Xbox Gamepad (userspace driver)
 I created an Input Config for a Xbox 360 controller running with
 xboxdrv on a Linux system (http://pingus.seul.org/~grumbel/xboxdrv/).
 
+```
 Z = Left shoulder button
 L = Left shoulder trigger
 A = A Button
 B = X Button
+```
 
 everything else should be obvious.
 
@@ -158,6 +163,7 @@ The guide=KEY_ESC allows you to quit the emulator by pressing the
 guide key on the controller. This is obviously just nice-to-have and
 not actually neccessary for the config to work.
 
+```
 [xboxdrv]
 silent=true
 trigger-as-button=true
@@ -169,12 +175,14 @@ guide=KEY_ESC
 [axismap]
 x2^deadzone:27000
 y2^deadzone:27000
+```
 
-11. Saitek Cyborg V.3 Rumble Pad (aka Saitek PS2700)
+11) Saitek Cyborg V.3 Rumble Pad (aka Saitek PS2700)
 Honestly, it's one of the best pads that I've used in a long time, so thought I'd contribute this quick config. Basically, Dpad and Analog sticks are unchanged, C-buttons are mapped to the right analog stick, L-R triggers are L1 and R1, Z is mapped to R2, A + B are mapped to X and Square, respectively, start is mapped to the Home button, and Triangle, Square, L2, Start, Select, and the Analog triggers are unused, since it's not intuitive to use them for what's left.
 
-12. Arsenal Gaming PS3 controller (aka. "Gasia Co.,Ltd PS(R) Gamepad")
+12) Arsenal Gaming PS3 controller (aka. "Gasia Co.,Ltd PS(R) Gamepad")
 
+```
 N64 Start = PS3 Start
 N64 D-pad = PS3 D-pad
 N64 joystick = PS3 left joystick
@@ -186,8 +194,11 @@ N64 L = PS3 L1
 N64 Z = PS3 L2
 Rumble pack swap = PS3 Triangle
 Memory pack swap = PS3 Circle
+```
 
-13. Default Keyboard interface:
+13) Default Keyboard interface:
+
+```
 Analog Pad is "Arrow Keys"
 C Up/Left/Down/Right are "I", "J", "K", "L"
 DPad Up/Left/Down/Right are "W", "A", "S", "D"
@@ -198,8 +209,9 @@ A is "left shift"
 B is "left control"
 Select Mempack = ","
 Select Rumblepack = "."
+```
 
-14. Special modifier keys
+14) Special modifier keys
  - Right-shift key: reduce amplitude of analog joystick X/Y axes by 25%
  - Right-control key: reduce amplitude of analog joystick X/Y axes by 50%
  - Left-Control + Left-Alt keys: grab or un-grab the mouse cursor (only if mouse control is enabled)
