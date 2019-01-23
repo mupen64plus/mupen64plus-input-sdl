@@ -449,7 +449,6 @@ static int setup_auto_controllers(int bPreConfig, int n64CtrlStart, int sdlCtrlI
         if (!bPreConfig)
             DebugMessage(M64MSG_INFO, "N64 Controller #%i: Using auto-config with SDL joystick %i ('%s')", n64CtrlStart+1, sdlCtrlIdx, sdlJoyName);
         ActiveControllers++;
-        ConfigSaveSection(SectionName);
     }
     else
     {
@@ -487,7 +486,6 @@ static int setup_auto_controllers(int bPreConfig, int n64CtrlStart, int sdlCtrlI
                     if (!bPreConfig)
                         DebugMessage(M64MSG_INFO, "N64 Controller #%i: Using auto-config with SDL joystick %i ('%s')", n64CtrlStart+j+1, sdlCtrlIdx, sdlJoyName);
                     ActiveControllers++;
-                    ConfigSaveSection(SectionName);
                     /* set the local controller mode to Manual so that we won't re-configure this controller in the next loop */
                     ControlMode[n64CtrlStart+j] = E_MODE_MANUAL;
                 }
@@ -578,8 +576,6 @@ void load_configuration(int bPreConfig)
             DeviceName[n64CtrlIdx][0] = 0;
             // write blank config for GUI front-ends
             init_controller_config(n64CtrlIdx, "", E_MODE_FULL_AUTO);
-            // save it to the file too
-            ConfigSaveSection(SectionName);
         }
         else
         {
@@ -655,7 +651,6 @@ void load_configuration(int bPreConfig)
                 /* copy the auto-config settings to the controller config section */
                 auto_copy_inputconfig("AutoConfig0", SectionName, "Keyboard");
                 ActiveControllers++;
-                ConfigSaveSection(SectionName);
             }
             else
             {
@@ -752,7 +747,6 @@ void load_configuration(int bPreConfig)
                 ConfigSetParameter(section, "device", M64TYPE_INT, &iNoDevice);
                 if (OrigControlMode[n64CtrlIdx] == E_MODE_FULL_AUTO)
                     ConfigSetParameter(section, "name", M64TYPE_STRING, "");
-                ConfigSaveSection(SectionName);
             }
         }
     }
@@ -771,7 +765,6 @@ void load_configuration(int bPreConfig)
             else
                 auto_copy_inputconfig("AutoConfig0", "Input-SDL-Control1", NULL);  // don't overwrite 'name' parameter
             ActiveControllers++;
-            ConfigSaveSection("Input-SDL-Control1");
         }
         else
         {
