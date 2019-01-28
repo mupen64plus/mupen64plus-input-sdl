@@ -141,6 +141,7 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Con
     ptr_CoreGetAPIVersions CoreAPIVersionFunc;
     
     int i, ConfigAPIVersion, DebugAPIVersion, VidextAPIVersion;
+    int joyWasInit;
 
     if (l_PluginInit)
         return M64ERR_ALREADY_INIT;
@@ -206,8 +207,21 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Con
     for (i = 0; i < 4; i++)
         controller[i].control = temp_core_controlinfo + i;
 
+    /* initialize the joystick subsystem if necessary */
+    joyWasInit = SDL_WasInit(SDL_INIT_JOYSTICK);
+    if (!joyWasInit)
+        if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == -1)
+        {
+            DebugMessage(M64MSG_ERROR, "Couldn't init SDL joystick subsystem: %s", SDL_GetError() );
+            return M64ERR_SYSTEM_FAIL;
+        }
+
     /* read plugin config from core config database, auto-config if necessary and update core database */
     load_configuration(1);
+
+    /* quit the joystick subsystem if necessary */
+    if (!joyWasInit)
+        SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 
     l_PluginInit = 1;
     return M64ERR_SUCCESS;
@@ -715,13 +729,6 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
 
 static void InitiateJoysticks(int cntrl)
 {
-    // init SDL joystick subsystem
-    if (!SDL_WasInit(SDL_INIT_JOYSTICK))
-        if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == -1) {
-            DebugMessage(M64MSG_ERROR, "Couldn't init SDL joystick subsystem: %s", SDL_GetError() );
-            return;
-        }
-
     if (controller[cntrl].device >= 0) {
         controller[cntrl].joystick = SDL_JoystickOpen(controller[cntrl].device);
         if (!controller[cntrl].joystick)
@@ -909,6 +916,14 @@ EXPORT void CALL InitiateControllers(CONTROL_INFO ControlInfo)
     // this small struct tells the core whether each controller is plugged in, and what type of pak is connected
     for (i = 0; i < 4; i++)
         controller[i].control = ControlInfo.Controls + i;
+
+    /* initialize the joystick subsystem if necessary (and leave it initialized) */
+    if (! SDL_WasInit(SDL_INIT_JOYSTICK))
+        if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == -1)
+        {
+            DebugMessage(M64MSG_ERROR, "Couldn't init SDL joystick subsystem: %s", SDL_GetError() );
+            return;
+        }
 
     // read configuration
     load_configuration(0);
