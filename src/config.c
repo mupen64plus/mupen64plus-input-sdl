@@ -121,15 +121,6 @@ static const char * get_sdl_joystick_name(int iCtrlIdx)
 {
     static char JoyName[256];
     const char *joySDLName;
-    int joyWasInit = SDL_WasInit(SDL_INIT_JOYSTICK);
-    
-    /* initialize the joystick subsystem if necessary */
-    if (!joyWasInit)
-        if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == -1)
-        {
-            DebugMessage(M64MSG_ERROR, "Couldn't init SDL joystick subsystem: %s", SDL_GetError() );
-            return NULL;
-        }
 
     /* get the name of the corresponding joystick */
     joySDLName = SDL_JoystickName(iCtrlIdx);
@@ -141,38 +132,11 @@ static const char * get_sdl_joystick_name(int iCtrlIdx)
         JoyName[255] = 0;
     }
 
-    /* quit the joystick subsystem if necessary */
-    if (!joyWasInit)
-        SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-
     /* if the SDL function had an error, then return NULL, otherwise return local copy of joystick name */
     if (joySDLName == NULL)
         return NULL;
     else
         return JoyName;
-}
-
-static int get_sdl_num_joysticks(void)
-{
-    int numJoysticks = 0;
-    int joyWasInit = SDL_WasInit(SDL_INIT_JOYSTICK);
-    
-    /* initialize the joystick subsystem if necessary */
-    if (!joyWasInit)
-        if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == -1)
-        {
-            DebugMessage(M64MSG_ERROR, "Couldn't init SDL joystick subsystem: %s", SDL_GetError() );
-            return 0;
-        }
-
-    /* get thenumber of joysticks */
-    numJoysticks = SDL_NumJoysticks();
-
-    /* quit the joystick subsystem if necessary */
-    if (!joyWasInit)
-        SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-
-    return numJoysticks;
 }
 
 /////////////////////////////////////
@@ -540,7 +504,7 @@ void load_configuration(int bPreConfig)
     int ControlDevice[4];
     char DeviceName[4][256];
     int ActiveControllers = 0;
-    int sdlNumJoysticks = get_sdl_num_joysticks();
+    int sdlNumJoysticks = SDL_NumJoysticks();
     float fVersion = 0.0f;
     const char *sdl_name;
     int ControllersFound = 0;
