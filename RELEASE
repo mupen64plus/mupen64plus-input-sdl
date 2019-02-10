@@ -1,6 +1,10 @@
 SDL Input plugin for Mupen64Plus
 --------------------------------
 
+Mupen64Plus-input-sdl v2.5.9 - February 10, 2019
+------------------------------------------------
+ - *** BETA RELEASE *** For Testing Only ***
+
 Mupen64Plus-input-sdl v2.5 - April 26, 2015
 -------------------------------------------
  - use SDL1.2 keysyms in the mupen64plus.cfg file Input section even when built against SDL2, with keysym converter
