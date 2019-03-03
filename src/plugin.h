@@ -24,6 +24,12 @@
 #ifndef __PLUGIN_H__
 #define __PLUGIN_H__
 
+#if defined(__GNUC__)
+#define ATTR_FMT(fmtpos, attrpos) __attribute__ ((format (printf, fmtpos, attrpos)))
+#else
+#define ATTR_FMT(fmtpos, attrpos)
+#endif
+
 #include <SDL.h>
 #include <string.h>
 #if ! SDL_VERSION_ATLEAST(1,3,0)
@@ -151,7 +157,7 @@ typedef struct
 extern SController controller[4];   // 4 controllers
 
 /* global function definitions */
-extern void DebugMessage(int level, const char *message, ...);
+extern void DebugMessage(int level, const char *message, ...) ATTR_FMT(2,3);
 
 /* declarations of pointers to Core config functions */
 extern ptr_ConfigListSections     ConfigListSections;
