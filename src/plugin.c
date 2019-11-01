@@ -115,6 +115,12 @@ static struct ff_effect ffstrong[4];
 static struct ff_effect ffweak[4];
 #endif //__linux__
 
+#ifndef min
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif // !min
+
+
 /* Global functions */
 void DebugMessage(int level, const char *message, ...)
 {
@@ -647,8 +653,10 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
             /* the mouse x/y values decay exponentially (returns to center), unless the left "Windows" key is held down */
             if (!myKeyState[SDL_SCANCODE_LGUI])
             {
-                mousex_residual = (mousex_residual * 224) / 256;
-                mousey_residual = (mousey_residual * 224) / 256;
+                /*mousex_residual = (mousex_residual * 224) / 256;
+                mousey_residual = (mousey_residual * 224) / 256;*/
+				mousex_residual = 0;
+				mousey_residual = 0;
             }
         }
         else
