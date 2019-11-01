@@ -639,8 +639,8 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
             }
 
             /* store the result */
-            int iX = mousex_residual;
-            int iY = -mousey_residual;
+            int iX = min(127, max(mousex_residual, -127));
+            int iY = -min(127, max(mousey_residual, -127));
             controller[Control].buttons.X_AXIS = iX;
             controller[Control].buttons.Y_AXIS = iY;
 

@@ -1,3 +1,11 @@
 /projects/unix/_obj*/
 /projects/unix/mupen64plus-input-sdl*.so
 /build/
+/projects/VisualStudio2013/Release
+/projects/VisualStudio2013/Debug
+*.db
+*.opendb
+*.ipch
+*.obj
+*.tlog
+*.vcxproj.user
