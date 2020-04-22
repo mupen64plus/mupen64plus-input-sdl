@@ -584,6 +584,10 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 iY = -axis_val;
         }
         /* store the result */
+        if (iX < -80) iX = -80;
+        if (iX >  80) iX =  80;
+        if (iY < -80) iY = -80;
+        if (iY >  80) iY =  80;
         controller[Control].buttons.X_AXIS = iX;
         controller[Control].buttons.Y_AXIS = iY;
     }
@@ -641,6 +645,10 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
             /* store the result */
             int iX = mousex_residual;
             int iY = -mousey_residual;
+            if (iX < -80) iX = -80;
+            if (iX >  80) iX =  80;
+            if (iY < -80) iY = -80;
+            if (iY >  80) iY =  80;
             controller[Control].buttons.X_AXIS = iX;
             controller[Control].buttons.Y_AXIS = iY;
 
