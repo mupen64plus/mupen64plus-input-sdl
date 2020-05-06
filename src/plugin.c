@@ -85,6 +85,8 @@ SController controller[4];   // 4 controllers
 static void (*l_DebugCallback)(void *, int, const char *) = NULL;
 static void *l_DebugCallContext = NULL;
 static int l_PluginInit = 0;
+static int l_joyWasInit = 0;
+static int l_hapticWasInit = 0;
 
 static unsigned short button_bits[] = {
     0x0001,  // R_DPAD
@@ -139,9 +141,8 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Con
                                    void (*DebugCallback)(void *, int, const char *))
 {
     ptr_CoreGetAPIVersions CoreAPIVersionFunc;
-    
+
     int i, ConfigAPIVersion, DebugAPIVersion, VidextAPIVersion;
-    int joyWasInit;
 
     if (l_PluginInit)
         return M64ERR_ALREADY_INIT;
@@ -157,7 +158,7 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Con
         DebugMessage(M64MSG_ERROR, "Core emulator broken; no CoreAPIVersionFunc() function found.");
         return M64ERR_INCOMPATIBLE;
     }
-    
+
     (*CoreAPIVersionFunc)(&ConfigAPIVersion, &DebugAPIVersion, &VidextAPIVersion, NULL);
     if ((ConfigAPIVersion & 0xffff0000) != (CONFIG_API_VERSION & 0xffff0000) || ConfigAPIVersion < CONFIG_API_VERSION)
     {
@@ -208,8 +209,8 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Con
         controller[i].control = temp_core_controlinfo + i;
 
     /* initialize the joystick subsystem if necessary */
-    joyWasInit = SDL_WasInit(SDL_INIT_JOYSTICK);
-    if (!joyWasInit)
+    l_joyWasInit = SDL_WasInit(SDL_INIT_JOYSTICK);
+    if (!l_joyWasInit)
         if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == -1)
         {
             DebugMessage(M64MSG_ERROR, "Couldn't init SDL joystick subsystem: %s", SDL_GetError() );
@@ -218,10 +219,6 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Con
 
     /* read plugin config from core config database, auto-config if necessary and update core database */
     load_configuration(1);
-
-    /* quit the joystick subsystem if necessary */
-    if (!joyWasInit)
-        SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 
     l_PluginInit = 1;
     return M64ERR_SUCCESS;
@@ -235,6 +232,10 @@ EXPORT m64p_error CALL PluginShutdown(void)
     /* reset some local variables */
     l_DebugCallback = NULL;
     l_DebugCallContext = NULL;
+
+    /* quit the joystick subsystem if necessary */
+    if (!l_joyWasInit)
+        SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 
     l_PluginInit = 0;
     return M64ERR_SUCCESS;
@@ -251,7 +252,7 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
 
     if (APIVersion != NULL)
         *APIVersion = INPUT_PLUGIN_API_VERSION;
-    
+
     if (PluginNamePtr != NULL)
         *PluginNamePtr = PLUGIN_NAME;
 
@@ -259,7 +260,7 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
     {
         *Capabilities = 0;
     }
-                    
+
     return M64ERR_SUCCESS;
 }
 
@@ -481,7 +482,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     int b, axis_val;
     SDL_Event event;
     unsigned char mstate;
-    
+
     SDL_PumpEvents();
 
     // Handle keyboard input first
@@ -500,7 +501,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 controller[b].joystick = SDL_JoystickOpen(controller[b].device);
         }
     }
-    
+
     // read joystick state
     SDL_JoystickUpdate();
 
@@ -759,7 +760,8 @@ static void DeinitJoystick(int cntrl)
 static void InitiateRumble(int cntrl)
 {
 #if SDL_VERSION_ATLEAST(2,0,0)
-    if (!SDL_WasInit(SDL_INIT_HAPTIC)) {
+    l_hapticWasInit = SDL_WasInit(SDL_INIT_HAPTIC);
+    if (!l_hapticWasInit) {
         if (SDL_InitSubSystem(SDL_INIT_HAPTIC) == -1) {
             DebugMessage(M64MSG_ERROR, "Couldn't init SDL haptic subsystem: %s", SDL_GetError() );
             return;
@@ -894,6 +896,10 @@ static void InitiateRumble(int cntrl)
 static void DeinitRumble(int cntrl)
 {
 #if SDL_VERSION_ATLEAST(2,0,0)
+	/* quit the haptic subsystem if necessary */
+    if (!l_hapticWasInit)
+        SDL_QuitSubSystem(SDL_INIT_HAPTIC);
+
     if (controller[cntrl].event_joystick) {
         SDL_HapticClose(controller[cntrl].event_joystick);
         controller[cntrl].event_joystick = NULL;
@@ -924,14 +930,6 @@ EXPORT void CALL InitiateControllers(CONTROL_INFO ControlInfo)
     // this small struct tells the core whether each controller is plugged in, and what type of pak is connected
     for (i = 0; i < 4; i++)
         controller[i].control = ControlInfo.Controls + i;
-
-    /* initialize the joystick subsystem if necessary (and leave it initialized) */
-    if (! SDL_WasInit(SDL_INIT_JOYSTICK))
-        if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == -1)
-        {
-            DebugMessage(M64MSG_ERROR, "Couldn't init SDL joystick subsystem: %s", SDL_GetError() );
-            return;
-        }
 
     // read configuration
     load_configuration(0);
@@ -987,9 +985,6 @@ EXPORT void CALL RomClosed(void)
         DeinitJoystick(i);
     }
 
-    // quit SDL joystick subsystem
-    SDL_QuitSubSystem( SDL_INIT_JOYSTICK );
-
     // release/ungrab mouse
 #if SDL_VERSION_ATLEAST(2,0,0)
     SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -1011,14 +1006,6 @@ EXPORT void CALL RomClosed(void)
 EXPORT int CALL RomOpen(void)
 {
     int i;
-
-    // init SDL joystick subsystem
-    if( !SDL_WasInit( SDL_INIT_JOYSTICK ) )
-        if( SDL_InitSubSystem( SDL_INIT_JOYSTICK ) == -1 )
-        {
-            DebugMessage(M64MSG_ERROR, "Couldn't init SDL joystick subsystem: %s", SDL_GetError() );
-            return 0;
-        }
 
     // open joysticks
     for (i = 0; i < 4; i++) {
