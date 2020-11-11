@@ -275,7 +275,7 @@ doSdlKeys(const unsigned char* keystate)
     if (keystate[SDL_SCANCODE_RCTRL])
         axis_max_val -= 40;
     if (keystate[SDL_SCANCODE_RSHIFT])
-        axis_max_val -= 20;
+        axis_max_val -= 25;
 
     for( c = 0; c < 4; c++ )
     {
