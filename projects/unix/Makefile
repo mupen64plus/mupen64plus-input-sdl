@@ -90,10 +90,13 @@ ifeq ("$(CPU)","OTHER")
   PIC ?= 1
 endif
 
+SRCDIR = ../../src
+OBJDIR = _obj$(POSTFIX)
+
 # base CFLAGS, LDLIBS, and LDFLAGS
 OPTFLAGS ?= -O3 -flto
 WARNFLAGS ?= -Wall
-CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -D_GNU_SOURCE=1
+CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I$(SRCDIR) -D_GNU_SOURCE=1
 LDFLAGS += $(SHARED)
 LDLIBS += -lm
 
@@ -218,9 +221,6 @@ ifeq ($(PLUGINDIR),)
   PLUGINDIR := $(LIBDIR)/mupen64plus
 endif
 
-SRCDIR = ../../src
-OBJDIR = _obj$(POSTFIX)
-
 # list of source files to compile
 SOURCE = \
 	$(SRCDIR)/plugin.c \
@@ -274,7 +274,7 @@ install: $(TARGET)
 	$(INSTALL) -d "$(DESTDIR)$(PLUGINDIR)"
 	$(INSTALL) -m 0644 $(INSTALL_STRIP_FLAG) $(TARGET) "$(DESTDIR)$(PLUGINDIR)"
 	$(INSTALL) -d "$(DESTDIR)$(SHAREDIR)"
-	$(INSTALL) -m 0644 "../../data/InputAutoCfg.ini" "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL) -m 0644 "$(SRCDIR)/../data/InputAutoCfg.ini" "$(DESTDIR)$(SHAREDIR)"
 
 uninstall:
 	$(RM) "$(DESTDIR)$(PLUGINDIR)/$(TARGET)"
