@@ -1,28 +1,25 @@
 version: 1.0.{build}
 
-configuration:
-  - Release
-platform:
-  - Win32
-  - x64
-
 before_build:
   - git clone --depth 1 https://github.com/mupen64plus/mupen64plus-win32-deps.git ..\mupen64plus-win32-deps
   - git clone --depth 1 https://github.com/mupen64plus/mupen64plus-core.git ..\mupen64plus-core
 
 build_script:
-  - msbuild projects\msvc\mupen64plus-input-sdl.vcxproj /p:Configuration=%configuration%;Platform=%platform%
+  - msbuild projects\msvc\mupen64plus-input-sdl.vcxproj /p:Configuration=Release;Platform=x64
+  - msbuild projects\msvc\mupen64plus-input-sdl.vcxproj /p:Configuration=Release;Platform=Win32
 
 after_build:
-  - ps: $env:rev1 = git describe --tags
-  - set rev2=%platform%
-  - if "%rev2%"=="Win32" set rev2=x86
-  - set filepkg=mupen64plus-input-sdl_v%rev1%_%rev2%
-  - cd projects\msvc\%platform%\%configuration%
-  - copy *.dll ..\..\..\..\data
-  - cd ..\..\..\..\data
-  - 7z a -t7z ..\build\%filepkg%.7z *
+  - ps: $env:rev = git describe --tags
+  - md tdata_x64 tdata_x86
+  - cd tdata_x64
+  - copy ..\projects\msvc\x64\Release\*.dll .
+  - copy ..\data\* .
+  - 7z a -t7z "..\build\mupen64plus-input-sdl_v%rev%_x64.7z" *
+  - cd ..\tdata_x86
+  - copy ..\projects\msvc\Win32\Release\*.dll .
+  - copy ..\data\* .
+  - 7z a -t7z "..\build\mupen64plus-input-sdl_v%rev%_x86.7z" *
 
 artifacts:
-  - path: build\$(filepkg).7z
-    name: $(filepkg)
+  - path: build\*.7z
+    name: Input SDL
