@@ -196,7 +196,24 @@ Rumble pack swap = PS3 Triangle
 Memory pack swap = PS3 Circle
 ```
 
-13) Default Keyboard interface:
+13) Google Stadia controller
+The Google Stadia controller can be used as a HID joystick by plugging it into a computer via USB-C or USB-C to USB-A.
+
+```
+N64 Start = Stadia Logo/Start
+N64 D-pad = Stadia D-pad
+N64 joystick = Stadia Left Analog Joystick
+N64 C buttons = Stadia Right Analog Joystick
+N64 A = Stadia A
+N64 B = Stadia B
+N64 R = Stadia Right Bumper
+N64 L = Stadia Left Bumper
+N64 Z = Stadia Left Trigger
+Rumble pack swap = Stadia Y
+Memory pack swap = Stadia X
+```
+
+14) Default Keyboard interface:
 
 ```
 Analog Pad is "Arrow Keys"
@@ -211,7 +228,7 @@ Select Mempack = ","
 Select Rumblepack = "."
 ```
 
-14) Special modifier keys
+15) Special modifier keys
  - Right-shift key: reduce amplitude of analog joystick X/Y axes by 25%
  - Right-control key: reduce amplitude of analog joystick X/Y axes by 50%
  - Left-Control + Left-Alt keys: grab or un-grab the mouse cursor (only if mouse control is enabled)
