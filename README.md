@@ -22,6 +22,28 @@ https://mupen64plus.org/wiki/index.php/Mupen64Plus_Plugin_Parameters#Input-SDL
    being pressed all the way to the edge.  To decrease the amount of simulated joystick
    deflection, the user may press Right Control, Right Shift, or Right Ctrl+Right Shift.
 
+## Default Keyboard interface:
+
+```
+Analog Pad is "Arrow Keys"
+C Up/Left/Down/Right are "I", "J", "K", "L"
+DPad Up/Left/Down/Right are "W", "A", "S", "D"
+Z trig is "z" key
+L and R trigs are "x" and "c"
+Start is "Enter" ("Return")
+A is "left shift"
+B is "left control"
+Select Mempack = ","
+Select Rumblepack = "."
+```
+
+## Special modifier keys
+
+ - Right-shift key: reduce amplitude of analog joystick X/Y axes by 25%
+ - Right-control key: reduce amplitude of analog joystick X/Y axes by 50%
+ - Left-Control + Left-Alt keys: grab or un-grab the mouse cursor (only if mouse control is enabled)
+ - Left-Windows key: do not auto-center joystick X/Y axes (only when mouse control is enabled)
+
 ## Notes for supported joysticks for auto-configuration:
 
 1) Jess Tech Rumble Pad (Saitek Rumble)
@@ -213,25 +235,40 @@ Rumble pack swap = Stadia Y
 Memory pack swap = Stadia X
 ```
 
-14) Default Keyboard interface:
+14) PS4 Controller for Linux
 
+The non-Linux configuration for the Sony Interactive Entertainment Wireless Controller had incompatible bindings. Z was right analog stick up.
+I made a list of the ps4 buttons:
 ```
-Analog Pad is "Arrow Keys"
-C Up/Left/Down/Right are "I", "J", "K", "L"
-DPad Up/Left/Down/Right are "W", "A", "S", "D"
-Z trig is "z" key
-L and R trigs are "x" and "c"
-Start is "Enter" ("Return")
-A is "left shift"
-B is "left control"
-Select Mempack = ","
-Select Rumblepack = "."
+button 0 = cross
+button 1 = circle
+button 2 = triangle
+button 3 = square
+button 4 = l1
+button 5 = r1
+button 6 = l2
+button 7 = r2
+button 8 = share
+button 9 = options
+button 10 = ps
+button 11 = l3
+button 12 = r3
+
+axis 0- = lstick left
+axis 0+ = lstick right
+axis 1- = lstick up
+axis 1+ = lstick down
+axis 2+ = l2
+axis 2- = l2
+axis 3- = rstick left
+axis 3+ = rstick right
+axis 4- = rstick up
+axis 4+ = rstick down
+axis 5+ = r2
+axis 5- = r2
+
+hat 0 Right = Right
+hat 0 Left = Left
+hat 0 Down = Down
+hat 0 Up = Up
 ```
-
-15) Special modifier keys
- - Right-shift key: reduce amplitude of analog joystick X/Y axes by 25%
- - Right-control key: reduce amplitude of analog joystick X/Y axes by 50%
- - Left-Control + Left-Alt keys: grab or un-grab the mouse cursor (only if mouse control is enabled)
- - Left-Windows key: do not auto-center joystick X/Y axes (only when mouse control is enabled)
-
-
