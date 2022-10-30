@@ -143,11 +143,6 @@ typedef struct
     int           device;           // joystick device; -1 = keyboard; -2 = none
     int           mouse;            // mouse enabled: 0 = no; 1 = yes
     SDL_Joystick *joystick;         // SDL joystick device
-#if SDL_VERSION_ATLEAST(2,0,0)
-    SDL_Haptic   *event_joystick;   // the sdl device for force feeback
-#else
-    int           event_joystick;   // the /dev/input/eventX device for force feeback
-#endif
     int           axis_deadzone[2]; // minimum absolute value before analog movement is recognized
     int           axis_peak[2];     // highest analog value returned by SDL, used for scaling
     float         mouse_sens[2];    // mouse sensitivity
