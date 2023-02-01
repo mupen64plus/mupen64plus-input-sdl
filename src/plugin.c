@@ -307,6 +307,12 @@ doSdlKeys(const unsigned char* keystate)
             else
                 controller[c].buttons.Y_AXIS = -axis_val;
         }
+        // sqrt-2 fix for too-fast diagonal movement
+        if (abs(controller[c].buttons.X_AXIS) == axis_max_val && abs(controller[c].buttons.Y_AXIS) == axis_max_val)
+        {
+            controller[c].buttons.X_AXIS = (int) (controller[c].buttons.X_AXIS / 1.41421356f);
+            controller[c].buttons.Y_AXIS = (int) (controller[c].buttons.Y_AXIS / 1.41421356f);
+        }
         if (controller[c].mouse)
         {
             if (keystate[SDL_SCANCODE_LCTRL] && keystate[SDL_SCANCODE_LALT])
