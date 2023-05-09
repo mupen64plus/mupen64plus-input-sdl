@@ -421,11 +421,19 @@ EXPORT void CALL ControllerCommand(int Control, unsigned char *Command)
                     DebugMessage(M64MSG_VERBOSE, "Triggering rumble pack.");
 #if SDL_VERSION_ATLEAST(2,0,0)
                 if(dwAddress == PAK_IO_RUMBLE && controller[Control].event_joystick) {
+#if SDL_VERSION_ATLEAST(2,0,18)
+                    if (*Data) {
+                        SDL_JoystickRumble(controller[Control].joystick, 0xFFFF, 0xFFFF, SDL_HAPTIC_INFINITY);
+                    } else {
+                        SDL_JoystickRumble(controller[Control].joystick, 0, 0, 0);
+                    }
+#else
                     if (*Data) {
                         SDL_HapticRumblePlay(controller[Control].event_joystick, 1, SDL_HAPTIC_INFINITY);
                     } else {
                         SDL_HapticRumbleStop(controller[Control].event_joystick);
                     }
+#endif /* SDL_VERSION_ATLEAST(2,0,18) */
                 }
 #elif __linux__
                 struct input_event play;
@@ -680,6 +688,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
 
     /* handle mempack / rumblepak switching (only if rumble is active on joystick) */
 #if SDL_VERSION_ATLEAST(2,0,0)
+#if !SDL_VERSION_ATLEAST(2,0,18)
     if (controller[Control].event_joystick) {
         static unsigned int SwitchPackTime[4] = {0, 0, 0, 0}, SwitchPackType[4] = {0, 0, 0, 0};
         if (controller[Control].buttons.Value & button_bits[14]) {
@@ -702,6 +711,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
             SwitchPackTime[Control] = 0;
         }
     }
+#endif /* SDL_VERSION_ATLEAST(2,0,18) */
 #elif __linux__
     if (controller[Control].event_joystick != 0)
     {
@@ -774,6 +784,15 @@ static void InitiateRumble(int cntrl)
         }
     }
 
+#if SDL_VERSION_ATLEAST(2,0,18)
+    if (SDL_JoystickHasRumble(controller[cntrl].joystick) == SDL_FALSE) {
+        DebugMessage(M64MSG_WARNING, "Joystick #%i doesn't support rumble effect", cntrl + 1);
+        controller[cntrl].event_joystick = 0;
+        return;
+    }
+
+    controller[cntrl].event_joystick = 1;
+#else
     controller[cntrl].event_joystick = SDL_HapticOpenFromJoystick(controller[cntrl].joystick);
     if (!controller[cntrl].event_joystick) {
         DebugMessage(M64MSG_WARNING, "Couldn't open rumble support for joystick #%i", cntrl + 1);
@@ -793,6 +812,7 @@ static void InitiateRumble(int cntrl)
         DebugMessage(M64MSG_WARNING, "Rumble initialization failed for Joystick #%i", cntrl + 1);
         return;
     }
+#endif /* SDL_VERSION_ATLEAST(2,0,18) */
 
     DebugMessage(M64MSG_INFO, "Rumble activated on N64 joystick #%i", cntrl + 1);
 #elif __linux__
@@ -906,10 +926,13 @@ static void DeinitRumble(int cntrl)
     if (!l_hapticWasInit)
         SDL_QuitSubSystem(SDL_INIT_HAPTIC);
 
+#if !SDL_VERSION_ATLEAST(2,0,18)
     if (controller[cntrl].event_joystick) {
         SDL_HapticClose(controller[cntrl].event_joystick);
         controller[cntrl].event_joystick = NULL;
     }
+#endif /* !SDL_VERSION_ATLEAST(2,0,18) */
+
 #endif
 }
 

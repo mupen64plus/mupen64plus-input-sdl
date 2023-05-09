@@ -143,7 +143,9 @@ typedef struct
     int           device;           // joystick device; -1 = keyboard; -2 = none
     int           mouse;            // mouse enabled: 0 = no; 1 = yes
     SDL_Joystick *joystick;         // SDL joystick device
-#if SDL_VERSION_ATLEAST(2,0,0)
+#if SDL_VERSION_ATLEAST(2,0,18)
+    int           event_joystick;   // if sdl device has rumble support
+#elif SDL_VERSION_ATLEAST(2,0,0)
     SDL_Haptic   *event_joystick;   // the sdl device for force feeback
 #else
     int           event_joystick;   // the /dev/input/eventX device for force feeback
