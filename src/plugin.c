@@ -493,7 +493,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
 {
     static int mousex_residual = 0;
     static int mousey_residual = 0;
-    int b, axis_val;
+    int b, axis_val, axis_max_val;
     SDL_Event event;
     unsigned char mstate;
 
@@ -502,6 +502,13 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     // Handle keyboard input first
     doSdlKeys(SDL_GetKeyboardState(NULL));
     doSdlKeys(myKeyState);
+    
+    // attenuate maximum analog stick movement if right shift/control is pressed
+    axis_max_val = 80;
+    if (myKeyState[SDL_SCANCODE_RCTRL])
+        axis_max_val -= 40;
+    if (myKeyState[SDL_SCANCODE_RSHIFT])
+        axis_max_val -= 25;
 
     for ( b = 0; b < 4; ++b )
     {
@@ -567,31 +574,31 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                 int joy_val = SDL_JoystickGetAxis(controller[Control].joystick, controller[Control].axis[b].axis_a);
                 int axis_dir = controller[Control].axis[b].axis_dir_a;
                 if (joy_val * axis_dir > deadzone)
-                    axis_val = -((abs(joy_val) - deadzone) * 80 / range);
+                    axis_val = -((abs(joy_val) - deadzone) * axis_max_val / range);
             }
             if( controller[Control].axis[b].axis_b >= 0 ) /* down and right for N64 */
             {
                 int joy_val = SDL_JoystickGetAxis(controller[Control].joystick, controller[Control].axis[b].axis_b);
                 int axis_dir = controller[Control].axis[b].axis_dir_b;
                 if (joy_val * axis_dir > deadzone)
-                    axis_val = ((abs(joy_val) - deadzone) * 80 / range);
+                    axis_val = ((abs(joy_val) - deadzone) * axis_max_val / range);
             }
             if( controller[Control].axis[b].hat >= 0 )
             {
                 if( controller[Control].axis[b].hat_pos_a >= 0 )
                     if( SDL_JoystickGetHat( controller[Control].joystick, controller[Control].axis[b].hat ) & controller[Control].axis[b].hat_pos_a )
-                        axis_val = -80;
+                        axis_val = -axis_max_val;
                 if( controller[Control].axis[b].hat_pos_b >= 0 )
                     if( SDL_JoystickGetHat( controller[Control].joystick, controller[Control].axis[b].hat ) & controller[Control].axis[b].hat_pos_b )
-                        axis_val = 80;
+                        axis_val = axis_max_val;
             }
 
             if( controller[Control].axis[b].button_a >= 0 )
                 if( SDL_JoystickGetButton( controller[Control].joystick, controller[Control].axis[b].button_a ) )
-                    axis_val = -80;
+                    axis_val = -axis_max_val;
             if( controller[Control].axis[b].button_b >= 0 )
                 if( SDL_JoystickGetButton( controller[Control].joystick, controller[Control].axis[b].button_b ) )
-                    axis_val = 80;
+                    axis_val = axis_max_val;
 
             if( b == 0 )
                 iX = axis_val;
