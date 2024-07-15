@@ -1,9 +1,105 @@
 SDL Input plugin for Mupen64Plus
 --------------------------------
 
-Mupen64Plus-input-sdl v2.5.9 - February 10, 2019
-------------------------------------------------
- - *** BETA RELEASE *** For Testing Only ***
+----------------------------------------------
+# Mupen64Plus-input-sdl v2.6.0 - July 14, 2024
+
+## Merged PRs
+
+* [132](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/132): CI/CD: Update to generic scripts, independent schedule, etc
+* [128](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/128): Add support for "Xbox Series X Controller"
+* [127](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/127): CI/CD: Fixes Ubuntu i386 builds, among other changes
+* [126](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/126): Update rumble functions for SDL v2.0.18+
+* [123](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/123): Fix inversion in C buttons on Ubuntu 22.04
+* [122](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/122): CI/CD: Integrate scheduled builds and other...
+* [118](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/118): Include yet another 360 controller.
+* [117](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/117): CI/CD: Update MSVC
+* [114](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/114): CI/CD: Update
+* [113](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/113): Add USB controller from PS1 Classic
+* [111](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/111): CI/CD: Implement GitHub Actions and public nightly builds
+* [110](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/110): Sony PS4 Controller support for linux
+* [109](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/109): Fix Xbox One S Controller
+* [108](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/108): Add Xbox One Elite Controller to InputAutoCfg.ini
+* [107](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/107): SAFFUN N64 A and B button and CL and CD button swapped
+* [105](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/105): Add Google Stadia controller to README.md, minor button mapping updates.
+* [104](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/104): Add input config for Google Stadia controller.
+* [101](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/101): Add Dragonbox Pyra Controller Config
+* [98](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/98): build: Allow out of tree builds.
+* [97](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/97): Enable tiptoe walking mechanics in Banjo games...
+* [94](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/94): Allow non-default compilers without resorting to symbolic links
+* [93](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/93): Allow to set custom platform toolset from commands
+* [91](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/91): Correctly manage SDL subsystems
+* [90](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/90): AppVeyor with artifact packaging
+* [89](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/89): Changes to have more generic project files
+* [86](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/86): Fixes for Nintendo Wii Remote Pro Controller autoconfig
+* [85](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/85): add tested autoconfig for "Controller (XEOX Gamepad)"
+
+
+## Closed Issues
+
+* [131](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/131): No InputAutoConfig.ini entry for 'Xbox Series X Controller'
+* [130](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/130): vibration support
+* [120](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/120): [BUG] Key Modifier when pressing a diagonal
+* [119](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/119): inputautocfg.ini from home
+* [103](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/103): PS5 DS5 Dualsense controller on Linux button axis mapping
+* [92](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/92): InputAutoCfg.ini / Wrong Logitech F710 mappings for A and B.
+* [84](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/84): Numpad not working and unhandled exception when binding numpad key 5 with num lock turned off.
+* [81](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/81): Logitech F310 auto configuration issue
+* [87](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/87): Two MAYFLASH N64 Controller Adaptors Issue
+* [80](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/80): joy con on mupen64 discussion
+* [79](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/79): 2.5.9: Missing INPUT_API_VERSION change (2.5 Input plugin not working with 2.5.9 core)
+
+
+## Top Contributors (2 or more commits)
+1. richard42
+2. Jj0YzL5nvJ
+3. GhostlyDark
+
+
+--------------------------------------------------
+# Mupen64Plus-input-sdl v2.5.9 - February 10, 2019
+
+## Merged PRs
+
+* [78](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/78): Improve input-sdl startup time.
+* [77](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/77): Remove use of ConfigSaveSection
+* [76](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/76): Recognise DS4 controllers in Bluetooth mode
+* [75](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/75): Updated support for the TigerGame Adapter
+* [73](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/73): Added Markdown version of the README
+* [72](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/72): Added an optional CMake build for mupen64plus-input-sdl
+* [69](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/69): Added the gioteck VX2 Wireless controller.
+* [68](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/68): Call SDL_PumpEvents() before processing inputs
+* [65](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/65): Added Multilaser Controller JS030
+* [63](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/63): Add auto config support for Guillemot Corporation DA Leader
+* [62](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/62): Update homepage links
+* [61](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/61): If DEBUG not set, set NDEBUG
+* [60](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/60): Build MXE targets as additional tests in travis build matrix
+* [58](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/58): Increase deadzone for axis->N64 button mappings
+* [56](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/56): Fix Microsoft X-Box 360 pad for Linux
+* [54](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/54): Fix Rumble switch button for Saitek P990 Dual Analog Pad.
+* [53](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/53): Fix XBOX 360 For Windows Controller
+* [50](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/50): Re-attach joystick if it has disconnected
+* [48](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/48): Use faster container based Travis CI
+* [45](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/45): Don't set "plugin" as part of autoconfig
+* [41](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/41): bump macosx-version-min to 10.6 for SDL2.0.5
+* [39](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/39): add PS4 controller name.
+* [38](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/38): (InputAutoCfg) Configure HORIPAD ONE automatically.
+* [36](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/36): Add autoconfigs for raphnet-tech v3 series adapters
+* [35](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/35): Add Logic3 controller config
+* [34](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/34): Use Ubuntu Trusty as base system for Travis CI
+* [32](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/32): FIX Auto detection of PLAYSTATION(R)3 Controller on OSX
+* [31](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/31): Add autoconfig support for Xbox One Wireless Controller (Dongle)
+* [30](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/30): Fix up the "Generic X-Box pad" section in accordance with the README
+* [29](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/29): Add "USB Gamepad "
+* [28](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/28): Added x64 configuration to VisualStudio2013 project file
+* [26](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/26): Remove unnecessary OpenBSD warning.
+* [25](https://github.com/mupen64plus/mupen64plus-input-sdl/pull/25): add config for Sony playstation 4 controller
+
+## Closed Issues
+
+* [44](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/44): Linux MayFlash Z and Start inverted
+* [46](https://github.com/mupen64plus/mupen64plus-input-sdl/issues/46): Yoshis Story Stamp with 360 Controller
+
 
 Mupen64Plus-input-sdl v2.5 - April 26, 2015
 -------------------------------------------
