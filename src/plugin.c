@@ -111,12 +111,6 @@ static int romopen = 0;         // is a rom opened
 
 static unsigned char myKeyState[SDL_NUM_SCANCODES];
 
-#if __linux__ && !SDL_VERSION_ATLEAST(2,0,0)
-static struct ff_effect ffeffect[4];
-static struct ff_effect ffstrong[4];
-static struct ff_effect ffweak[4];
-#endif //__linux__
-
 /* Global functions */
 void DebugMessage(int level, const char *message, ...)
 {
@@ -322,11 +316,7 @@ doSdlKeys(const unsigned char* keystate)
                     grabtoggled = 1;
                     grabmouse = !grabmouse;
                     // grab/ungrab mouse
-#if SDL_VERSION_ATLEAST(2,0,0)
                     SDL_SetRelativeMouseMode(grabmouse ? SDL_TRUE : SDL_FALSE);
-#else
-                    SDL_WM_GrabInput( grabmouse ? SDL_GRAB_ON : SDL_GRAB_OFF );
-#endif
                     SDL_ShowCursor( grabmouse ? 0 : 1 );
                 }
             }
@@ -419,7 +409,6 @@ EXPORT void CALL ControllerCommand(int Control, unsigned char *Command)
                 unsigned int dwAddress = (Command[3] << 8) + (Command[4] & 0xE0);
               if (dwAddress == PAK_IO_RUMBLE && *Data)
                     DebugMessage(M64MSG_VERBOSE, "Triggering rumble pack.");
-#if SDL_VERSION_ATLEAST(2,0,0)
                 if(dwAddress == PAK_IO_RUMBLE && controller[Control].event_joystick) {
 #if SDL_VERSION_ATLEAST(2,0,18)
                     if (*Data) {
@@ -435,31 +424,6 @@ EXPORT void CALL ControllerCommand(int Control, unsigned char *Command)
                     }
 #endif /* SDL_VERSION_ATLEAST(2,0,18) */
                 }
-#elif __linux__
-                struct input_event play;
-                if( dwAddress == PAK_IO_RUMBLE && controller[Control].event_joystick != 0)
-                {
-                    if( *Data )
-                    {
-                        play.type = EV_FF;
-                        play.code = ffeffect[Control].id;
-                        play.value = 1;
-
-                        if (write(controller[Control].event_joystick, (const void*) &play, sizeof(play)) == -1)
-                            perror("Error starting rumble effect");
-
-                    }
-                    else
-                    {
-                        play.type = EV_FF;
-                        play.code = ffeffect[Control].id;
-                        play.value = 0;
-
-                        if (write(controller[Control].event_joystick, (const void*) &play, sizeof(play)) == -1)
-                            perror("Error stopping rumble effect");
-                    }
-                }
-#endif //__linux__
                 Data[32] = DataCRC( Data, 32 );
             }
             break;
@@ -514,11 +478,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     {
         if (controller[b].device >= 0)
         {
-#if SDL_VERSION_ATLEAST(2,0,0)
             if (!SDL_JoystickGetAttached(controller[b].joystick))
-#else
-            if (!SDL_JoystickOpened(controller[b].device))
-#endif
                 controller[b].joystick = SDL_JoystickOpen(controller[b].device);
         }
     }
@@ -626,22 +586,12 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
 
     if (controller[Control].mouse)
     {
-#if SDL_VERSION_ATLEAST(2,0,0)
         if (SDL_GetRelativeMouseMode())
-#else
-        if (SDL_WM_GrabInput(SDL_GRAB_QUERY) == SDL_GRAB_ON)
-#endif
         {
-#if SDL_VERSION_ATLEAST(1,3,0)
             while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) == 1)
-#else
-            while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_EVENTMASK(SDL_MOUSEMOTION)) == 1)
-#endif
             {
-#if SDL_VERSION_ATLEAST(2,0,0)
                 int w, h;
                 SDL_Window *focus;
-#endif
 
                 if (event.motion.xrel)
                 {
@@ -652,7 +602,6 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                     mousey_residual += (int) (event.motion.yrel * controller[Control].mouse_sens[1]);
                 }
 
-#if SDL_VERSION_ATLEAST(2,0,0)
                 focus = SDL_GetKeyboardFocus();
                 if (focus) {
                     SDL_GetWindowSize(focus, &w, &h);
@@ -661,7 +610,6 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
                     mousex_residual = 0;
                     mousey_residual = 0;
                 }
-#endif
             }
 
             /* store the result */
@@ -694,7 +642,6 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     *Keys = controller[Control].buttons;
 
     /* handle mempack / rumblepak switching (only if rumble is active on joystick) */
-#if SDL_VERSION_ATLEAST(2,0,0)
 #if !SDL_VERSION_ATLEAST(2,0,18)
     if (controller[Control].event_joystick) {
         static unsigned int SwitchPackTime[4] = {0, 0, 0, 0}, SwitchPackType[4] = {0, 0, 0, 0};
@@ -719,42 +666,6 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
         }
     }
 #endif /* SDL_VERSION_ATLEAST(2,0,18) */
-#elif __linux__
-    if (controller[Control].event_joystick != 0)
-    {
-        struct input_event play;
-        static unsigned int SwitchPackTime[4] = {0, 0, 0, 0}, SwitchPackType[4] = {0, 0, 0, 0};
-        // when the user switches packs, we should mimick the act of removing 1 pack, and then inserting another 1 second later
-        if (controller[Control].buttons.Value & button_bits[14])
-        {
-            SwitchPackTime[Control] = SDL_GetTicks();         // time at which the 'switch pack' command was given
-            SwitchPackType[Control] = PLUGIN_MEMPAK;          // type of new pack to insert
-            controller[Control].control->Plugin = PLUGIN_NONE;// remove old pack
-            play.type = EV_FF;
-            play.code = ffweak[Control].id;
-            play.value = 1;
-            if (write(controller[Control].event_joystick, (const void*) &play, sizeof(play)) == -1)
-                perror("Error starting rumble effect");
-        }
-        if (controller[Control].buttons.Value & button_bits[15])
-        {
-            SwitchPackTime[Control] = SDL_GetTicks();         // time at which the 'switch pack' command was given
-            SwitchPackType[Control] = PLUGIN_RAW;             // type of new pack to insert
-            controller[Control].control->Plugin = PLUGIN_NONE;// remove old pack
-            play.type = EV_FF;
-            play.code = ffstrong[Control].id;
-            play.value = 1;
-            if (write(controller[Control].event_joystick, (const void*) &play, sizeof(play)) == -1)
-                perror("Error starting rumble effect");
-        }
-        // handle inserting new pack if the time has arrived
-        if (SwitchPackTime[Control] != 0 && (SDL_GetTicks() - SwitchPackTime[Control]) >= 1000)
-        {
-            controller[Control].control->Plugin = SwitchPackType[Control];
-            SwitchPackTime[Control] = 0;
-        }
-    }
-#endif /* __linux__ */
 
     controller[Control].buttons.Value = 0;
 }
@@ -772,17 +683,14 @@ static void InitiateJoysticks(int cntrl)
 
 static void DeinitJoystick(int cntrl)
 {
-#if SDL_VERSION_ATLEAST(2,0,0)
     if (controller[cntrl].joystick) {
         SDL_JoystickClose(controller[cntrl].joystick);
         controller[cntrl].joystick = NULL;
     }
-#endif
 }
 
 static void InitiateRumble(int cntrl)
 {
-#if SDL_VERSION_ATLEAST(2,0,0)
     l_hapticWasInit = SDL_WasInit(SDL_INIT_HAPTIC);
     if (!l_hapticWasInit) {
         if (SDL_InitSubSystem(SDL_INIT_HAPTIC) == -1) {
@@ -822,113 +730,10 @@ static void InitiateRumble(int cntrl)
 #endif /* SDL_VERSION_ATLEAST(2,0,18) */
 
     DebugMessage(M64MSG_INFO, "Rumble activated on N64 joystick #%i", cntrl + 1);
-#elif __linux__
-    DIR* dp;
-    struct dirent* ep;
-    unsigned long features[4];
-    char temp[128];
-    char temp2[128];
-    int iFound = 0;
-
-    controller[cntrl].event_joystick = 0;
-
-    sprintf(temp,"/sys/class/input/js%d/device", controller[cntrl].device);
-    dp = opendir(temp);
-
-    if(dp==NULL)
-        return;
-
-    while ((ep=readdir(dp)))
-        {
-        if (strncmp(ep->d_name, "event",5)==0)
-            {
-            sprintf(temp, "/dev/input/%s", ep->d_name);
-            iFound = 1;
-            break;
-            }
-        else if(strncmp(ep->d_name,"input:event", 11)==0)
-            {
-            sscanf(ep->d_name, "input:%s", temp2);
-            sprintf(temp, "/dev/input/%s", temp2);
-            iFound = 1;
-            break;
-            }
-        else if(strncmp(ep->d_name,"input:input", 11)==0)
-            {
-            strcat(temp, "/");
-            strcat(temp, ep->d_name);
-            closedir (dp);
-            dp = opendir(temp);
-            if(dp==NULL)
-                return;
-            }
-       }
-
-    closedir(dp);
-
-    if (!iFound)
-    {
-        DebugMessage(M64MSG_WARNING, "Couldn't find input event for rumble support.");
-        return;
-    }
-
-    controller[cntrl].event_joystick = open(temp, O_RDWR);
-    if(controller[cntrl].event_joystick==-1)
-        {
-        DebugMessage(M64MSG_WARNING, "Couldn't open device file '%s' for rumble support.", temp);
-        controller[cntrl].event_joystick = 0;
-        return;
-        }
-
-    if(ioctl(controller[cntrl].event_joystick, EVIOCGBIT(EV_FF, sizeof(unsigned long) * 4), features)==-1)
-        {
-        DebugMessage(M64MSG_WARNING, "Linux kernel communication failed for force feedback (rumble).\n");
-        controller[cntrl].event_joystick = 0;
-        return;
-        }
-
-    if(!test_bit(FF_RUMBLE, features))
-        {
-        DebugMessage(M64MSG_WARNING, "No rumble supported on N64 joystick #%i", cntrl + 1);
-        controller[cntrl].event_joystick = 0;
-        return;
-        }
-
-    ffeffect[cntrl].type = FF_RUMBLE;
-    ffeffect[cntrl].id = -1;
-    ffeffect[cntrl].u.rumble.strong_magnitude = 0xFFFF;
-    ffeffect[cntrl].u.rumble.weak_magnitude = 0xFFFF;
-    ffeffect[cntrl].replay.length = 0x7fff;             // hack: xboxdrv is buggy and doesn't support infinite replay.
-                                                        // when xboxdrv is fixed (https://github.com/Grumbel/xboxdrv/issues/47),
-                                                        // please remove this
-
-    ioctl(controller[cntrl].event_joystick, EVIOCSFF, &ffeffect[cntrl]);
-
-    ffstrong[cntrl].type = FF_RUMBLE;
-    ffstrong[cntrl].id = -1;
-    ffstrong[cntrl].u.rumble.strong_magnitude = 0xFFFF;
-    ffstrong[cntrl].u.rumble.weak_magnitude = 0x0000;
-    ffstrong[cntrl].replay.length = 500;
-    ffstrong[cntrl].replay.delay = 0;
-
-    ioctl(controller[cntrl].event_joystick, EVIOCSFF, &ffstrong[cntrl]);
-
-    ffweak[cntrl].type = FF_RUMBLE;
-    ffweak[cntrl].id = -1;
-    ffweak[cntrl].u.rumble.strong_magnitude = 0x0000;
-    ffweak[cntrl].u.rumble.weak_magnitude = 0xFFFF;
-    ffweak[cntrl].replay.length = 500;
-    ffweak[cntrl].replay.delay = 0;
-
-    ioctl(controller[cntrl].event_joystick, EVIOCSFF, &ffweak[cntrl]);
-
-    DebugMessage(M64MSG_INFO, "Rumble activated on N64 joystick #%i", cntrl + 1);
-#endif /* __linux__ */
 }
 
 static void DeinitRumble(int cntrl)
 {
-#if SDL_VERSION_ATLEAST(2,0,0)
 	/* quit the haptic subsystem if necessary */
     if (!l_hapticWasInit)
         SDL_QuitSubSystem(SDL_INIT_HAPTIC);
@@ -939,8 +744,6 @@ static void DeinitRumble(int cntrl)
         controller[cntrl].event_joystick = NULL;
     }
 #endif /* !SDL_VERSION_ATLEAST(2,0,18) */
-
-#endif
 }
 
 /******************************************************************
@@ -1022,11 +825,7 @@ EXPORT void CALL RomClosed(void)
     }
 
     // release/ungrab mouse
-#if SDL_VERSION_ATLEAST(2,0,0)
     SDL_SetRelativeMouseMode(SDL_FALSE);
-#else
-    SDL_WM_GrabInput( SDL_GRAB_OFF );
-#endif
     SDL_ShowCursor( 1 );
 
     romopen = 0;
@@ -1053,16 +852,9 @@ EXPORT int CALL RomOpen(void)
     if (controller[0].mouse || controller[1].mouse || controller[2].mouse || controller[3].mouse)
     {
         SDL_ShowCursor( 0 );
-#if SDL_VERSION_ATLEAST(2,0,0)
         if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
             DebugMessage(M64MSG_WARNING, "Couldn't grab input! Mouse support won't work!");
         }
-#else
-        if (SDL_WM_GrabInput( SDL_GRAB_ON ) != SDL_GRAB_ON)
-        {
-            DebugMessage(M64MSG_WARNING, "Couldn't grab input! Mouse support won't work!");
-        }
-#endif
     }
 
     romopen = 1;

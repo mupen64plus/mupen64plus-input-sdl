@@ -32,21 +32,6 @@
 
 #include <SDL.h>
 #include <string.h>
-#if ! SDL_VERSION_ATLEAST(1,3,0)
-
-#define SDL_GetKeyboardState SDL_GetKeyState
-#define SDL_SCANCODE_UNKNOWN SDLK_UNKNOWN
-#define SDL_NUM_SCANCODES SDLK_LAST
-#define SDL_SCANCODE_RCTRL SDLK_RCTRL
-#define SDL_SCANCODE_RSHIFT SDLK_RSHIFT
-#define SDL_SCANCODE_LCTRL SDLK_LCTRL
-#define SDL_SCANCODE_LALT SDLK_LALT
-#define SDL_SCANCODE_LGUI SDLK_LSUPER
-#define SDL_Scancode SDLKey
-
-#endif
-
-#if SDL_VERSION_ATLEAST(2,0,0)
 
 static inline const char* _SDL_JoystickName(int device_index)
 {
@@ -70,8 +55,6 @@ static inline const char* _SDL_JoystickName(int device_index)
 }
 
 #define SDL_JoystickName(device_index) _SDL_JoystickName(device_index)
-
-#endif
 
 #define M64P_PLUGIN_PROTOTYPES 1
 #include "m64p_config.h"
@@ -145,10 +128,8 @@ typedef struct
     SDL_Joystick *joystick;         // SDL joystick device
 #if SDL_VERSION_ATLEAST(2,0,18)
     int           event_joystick;   // if sdl device has rumble support
-#elif SDL_VERSION_ATLEAST(2,0,0)
+#else /* SDL_VERSION_ATLEAST(2,0,0) */
     SDL_Haptic   *event_joystick;   // the sdl device for force feeback
-#else
-    int           event_joystick;   // the /dev/input/eventX device for force feeback
 #endif
     int           axis_deadzone[2]; // minimum absolute value before analog movement is recognized
     int           axis_peak[2];     // highest analog value returned by SDL, used for scaling

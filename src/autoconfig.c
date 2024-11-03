@@ -148,12 +148,10 @@ static int auto_compare_name(const char *joySDLName, char *line)
         wordPtr = StripSpace(wordPtr + 6);
         joyFoundScore = 1;
     }
-#if SDL_VERSION_ATLEAST(2,0,0)
     else if (strncmp(wordPtr, "XInput:", 7) == 0) {
         wordPtr = StripSpace(wordPtr + 7);
         joyFoundScore = 2;
     }
-#endif
 #endif
     /* extra points if the section name is a perfect match */
     if (strcmp(wordPtr, joySDLName) == 0)
