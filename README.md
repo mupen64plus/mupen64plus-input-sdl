@@ -18,9 +18,25 @@ https://mupen64plus.org/wiki/index.php/Mupen64Plus_Plugin_Parameters#Input-SDL
  - If one of the enabled controllers has the "mouse" general-purpose config parameters set
    to True, the plugin will hide the mouse cursor and 'grab' the mouse pointer.  The user
    may press the Left Control and Alt keys together to toggle the mouse cursor on and off.
+ - Set `peripheral` in an `Input-SDL-ControlN` section to `controller` (default), `randnet`,
+   `mouse`, or `none` to select the device connected to that N64 port. Set `mode = 0` and
+   `plugged = True` for a keyboard or mouse. `randnet` maps the host keyboard to the Randnet
+   keyboard matrix. `mouse` maps the host mouse to the N64 mouse, with left and right buttons
+   mapped to A and B. Each configured port receives the corresponding host input.
+ - Peripheral selection can change while a ROM is running. Frontends may update the
+   `peripheral` config parameter through the core API. The plugin also polls
+   `mupen64plus.cfg` for edits. A port switched back to `controller` resumes its initial
+   plugged and Controller Pak settings.
+ - When a Randnet keyboard is connected, the core passes emulator shortcut keys to the ROM.
+   Close the emulator window to exit while this mode is selected.
+
  - If X/Y analog axes are mapped to keys, a plain keypress will simulate the joystick
    being pressed all the way to the edge.  To decrease the amount of simulated joystick
    deflection, the user may press Right Control, Right Shift, or Right Ctrl+Right Shift.
+
+The Randnet matrix mapping follows the [MiSTer N64 keyboard scanner][randnet-matrix].
+
+[randnet-matrix]: https://github.com/MiSTer-devel/N64_MiSTer/blob/master/rtl/keyboard_scanner.vhd
 
 ## Default Keyboard interface:
 
