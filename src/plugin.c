@@ -177,6 +177,7 @@ static int mouse_escape_released;
 static int mouse_escape_pending;
 static int mouse_focus_lost;
 static int mouse_focus_seen;
+static int mouse_recapture_click;
 
 static int mouse_capture_enabled(void)
 {
@@ -190,6 +191,9 @@ static int mouse_capture_enabled(void)
 
 static void restore_mouse_capture_on_focus(void)
 {
+    SDL_Window *focus;
+    int clicked;
+
     if (!romopen || !mouse_escape_released)
         return;
     SDL_PumpEvents();
@@ -205,11 +209,17 @@ static void restore_mouse_capture_on_focus(void)
         mouse_escape_pending = 0;
         return;
     }
-    if (SDL_GetKeyboardFocus() == NULL) {
+    focus = SDL_GetKeyboardFocus();
+    clicked = focus != NULL && SDL_GetMouseFocus() == focus &&
+        (SDL_GetMouseState(NULL, NULL) &
+         (SDL_BUTTON(SDL_BUTTON_LEFT) | SDL_BUTTON(SDL_BUTTON_RIGHT) |
+          SDL_BUTTON(SDL_BUTTON_MIDDLE)));
+    if (focus == NULL) {
         if (mouse_focus_seen)
             mouse_focus_lost = 1;
-    } else if (mouse_focus_lost && SDL_SetRelativeMouseMode(SDL_TRUE) == 0) {
+    } else if ((mouse_focus_lost || clicked) && SDL_SetRelativeMouseMode(SDL_TRUE) == 0) {
         SDL_ShowCursor(SDL_DISABLE);
+        mouse_recapture_click = clicked;
         mouse_escape_released = 0;
         mouse_focus_lost = 0;
         mouse_focus_seen = 0;
@@ -305,6 +315,7 @@ static void refresh_native_peripheral(int port)
         mouse_escape_pending = 0;
         mouse_focus_lost = 0;
         mouse_focus_seen = 0;
+        mouse_recapture_click = 0;
     }
     DebugMessage(M64MSG_INFO, "N64 port %d peripheral: %s", port + 1,
                  type == NATIVE_KEYBOARD ? "Randnet keyboard" :
@@ -370,6 +381,14 @@ static void read_native_peripheral(int port, unsigned char *command)
                 return;
             }
             SDL_PumpEvents();
+            if (mouse_recapture_click) {
+                SDL_GetRelativeMouseState(NULL, NULL);
+                if (SDL_GetMouseState(NULL, NULL) == 0)
+                    mouse_recapture_click = 0;
+                native_mouse_x[port] = native_mouse_y[port] = 0;
+                memset(response, 0, 4);
+                return;
+            }
             buttons = SDL_GetRelativeMouseState(&x, &y);
             for (i = 0; i < 4; i++) {
                 if (native_type[i] == NATIVE_MOUSE) {
@@ -1205,6 +1224,7 @@ EXPORT void CALL RomClosed(void)
     mouse_escape_pending = 0;
     mouse_focus_lost = 0;
     mouse_focus_seen = 0;
+    mouse_recapture_click = 0;
 
     romopen = 0;
 }
@@ -1224,6 +1244,7 @@ EXPORT int CALL RomOpen(void)
     mouse_escape_pending = 0;
     mouse_focus_lost = 0;
     mouse_focus_seen = 0;
+    mouse_recapture_click = 0;
 
     // open joysticks
     for (i = 0; i < 4; i++) {
@@ -1261,6 +1282,7 @@ EXPORT void CALL SDL_KeyDown(int keymod, int keysym)
         mouse_escape_pending = 1;
         mouse_focus_lost = 0;
         mouse_focus_seen = 0;
+        mouse_recapture_click = 0;
     }
     if (keysym >= 0 && keysym < SDL_NUM_SCANCODES)
         myKeyState[keysym] = 1;
