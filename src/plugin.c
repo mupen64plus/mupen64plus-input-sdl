@@ -155,7 +155,7 @@ static const struct native_key_map native_keys[] = {
     { SDL_SCANCODE_PERIOD, 0x0802 }, { SDL_SCANCODE_SLASH, 0x0702 },
     { SDL_SCANCODE_UP, 0x0204 },
     { SDL_SCANCODE_RSHIFT, 0x0E06 }, { SDL_SCANCODE_LCTRL, 0x1107 },
-    { SDL_SCANCODE_RCTRL, 0x1107 }, { SDL_SCANCODE_LALT, 0x1008 },
+    { SDL_SCANCODE_LALT, 0x1008 },
     { SDL_SCANCODE_RALT, 0x1008 }, { SDL_SCANCODE_LGUI, 0x0F07 },
     { SDL_SCANCODE_RGUI, 0x0F07 }, { SDL_SCANCODE_SPACE, 0x0602 },
     { SDL_SCANCODE_KP_1, 0x1002 }, { SDL_SCANCODE_KP_2, 0x0E02 },
@@ -173,6 +173,32 @@ static long long native_mouse_x[4], native_mouse_y[4];
 static unsigned long long native_config_hash;
 static unsigned int native_config_polls;
 static int native_config_seen;
+static int mouse_escape_released;
+static int mouse_focus_lost;
+
+static int mouse_capture_enabled(void)
+{
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (native_type[i] == NATIVE_MOUSE || controller[i].mouse)
+            return 1;
+    }
+    return 0;
+}
+
+static void restore_mouse_capture_on_focus(void)
+{
+    if (!romopen || !mouse_escape_released)
+        return;
+    SDL_PumpEvents();
+    if (SDL_GetKeyboardFocus() == NULL) {
+        mouse_focus_lost = 1;
+    } else if (mouse_focus_lost && SDL_SetRelativeMouseMode(SDL_TRUE) == 0) {
+        SDL_ShowCursor(SDL_DISABLE);
+        mouse_escape_released = 0;
+        mouse_focus_lost = 0;
+    }
+}
 
 static void poll_native_config_file(int baseline)
 {
@@ -257,6 +283,8 @@ static void refresh_native_peripheral(int port)
     if (romopen) {
         SDL_SetRelativeMouseMode(grab ? SDL_TRUE : SDL_FALSE);
         SDL_ShowCursor(grab ? SDL_DISABLE : SDL_ENABLE);
+        mouse_escape_released = 0;
+        mouse_focus_lost = 0;
     }
     DebugMessage(M64MSG_INFO, "N64 port %d peripheral: %s", port + 1,
                  type == NATIVE_KEYBOARD ? "Randnet keyboard" :
@@ -316,6 +344,11 @@ static void read_native_peripheral(int port, unsigned char *command)
             int x, y;
             Uint32 buttons;
             if (command[0] != 1 || command[1] != 4) goto unsupported;
+            if (mouse_escape_released) {
+                native_mouse_x[port] = native_mouse_y[port] = 0;
+                memset(response, 0, 4);
+                return;
+            }
             SDL_PumpEvents();
             buttons = SDL_GetRelativeMouseState(&x, &y);
             for (i = 0; i < 4; i++) {
@@ -555,7 +588,7 @@ doSdlKeys(const unsigned char* keystate)
     static int grabmouse = 1, grabtoggled = 0;
 
     axis_max_val = 80;
-    if (keystate[SDL_SCANCODE_RCTRL])
+    if (keystate[SDL_SCANCODE_RCTRL] && !mouse_capture_enabled())
         axis_max_val -= 40;
     if (keystate[SDL_SCANCODE_RSHIFT])
         axis_max_val -= 25;
@@ -753,6 +786,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     unsigned char mstate;
 
     refresh_native_peripheral(Control);
+    restore_mouse_capture_on_focus();
     if (native_type[Control] != NATIVE_STANDARD) {
         Keys->Value = 0;
         return;
@@ -766,7 +800,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     
     // attenuate maximum analog stick movement if right shift/control is pressed
     axis_max_val = 80;
-    if (myKeyState[SDL_SCANCODE_RCTRL])
+    if (myKeyState[SDL_SCANCODE_RCTRL] && !mouse_capture_enabled())
         axis_max_val -= 40;
     if (myKeyState[SDL_SCANCODE_RSHIFT])
         axis_max_val -= 25;
@@ -1115,6 +1149,7 @@ EXPORT void CALL InitiateControllers(CONTROL_INFO ControlInfo)
 *******************************************************************/
 EXPORT void CALL ReadController(int Control, unsigned char *Command)
 {
+    restore_mouse_capture_on_focus();
     if (Control >= 0 && Control < 4 && Command != NULL &&
         native_type[Control] != NATIVE_STANDARD) {
         read_native_peripheral(Control, Command);
@@ -1146,6 +1181,8 @@ EXPORT void CALL RomClosed(void)
     // release/ungrab mouse
     SDL_SetRelativeMouseMode(SDL_FALSE);
     SDL_ShowCursor( 1 );
+    mouse_escape_released = 0;
+    mouse_focus_lost = 0;
 
     romopen = 0;
 }
@@ -1160,6 +1197,9 @@ EXPORT void CALL RomClosed(void)
 EXPORT int CALL RomOpen(void)
 {
     int i;
+
+    mouse_escape_released = 0;
+    mouse_focus_lost = 0;
 
     // open joysticks
     for (i = 0; i < 4; i++) {
@@ -1191,6 +1231,13 @@ EXPORT int CALL RomOpen(void)
 *******************************************************************/
 EXPORT void CALL SDL_KeyDown(int keymod, int keysym)
 {
+    if (keysym == SDL_SCANCODE_RCTRL && !myKeyState[keysym] && romopen &&
+        mouse_capture_enabled()) {
+        mouse_escape_released = 1;
+        mouse_focus_lost = 0;
+        SDL_SetRelativeMouseMode(SDL_FALSE);
+        SDL_ShowCursor(SDL_ENABLE);
+    }
     if (keysym >= 0 && keysym < SDL_NUM_SCANCODES)
         myKeyState[keysym] = 1;
 }

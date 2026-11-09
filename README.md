@@ -29,6 +29,8 @@ https://mupen64plus.org/wiki/index.php/Mupen64Plus_Plugin_Parameters#Input-SDL
    plugged and Controller Pak settings.
  - When a Randnet keyboard is connected, the core passes emulator shortcut keys to the ROM.
    Close the emulator window to exit while this mode is selected.
+ - Press Right Control to release the mouse and show the normal cursor. The mouse is captured
+   again when the emulator window regains focus.
 
  - If X/Y analog axes are mapped to keys, a plain keypress will simulate the joystick
    being pressed all the way to the edge.  To decrease the amount of simulated joystick
@@ -56,7 +58,7 @@ Select Rumblepack = "."
 ## Special modifier keys
 
  - Right-shift key: reduce amplitude of analog joystick X/Y axes by 25%
- - Right-control key: reduce amplitude of analog joystick X/Y axes by 50%
+ - Right-control key: release a captured mouse, or reduce analog joystick X/Y axes by 50%
  - Left-Control + Left-Alt keys: grab or un-grab the mouse cursor (only if mouse control is enabled)
  - Left-Windows key: do not auto-center joystick X/Y axes (only when mouse control is enabled)
 
