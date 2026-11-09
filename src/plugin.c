@@ -22,6 +22,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <SDL.h>
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,6 +111,309 @@ static unsigned short button_bits[] = {
 static int romopen = 0;         // is a rom opened
 
 static unsigned char myKeyState[SDL_NUM_SCANCODES];
+
+enum native_peripheral { NATIVE_STANDARD, NATIVE_KEYBOARD, NATIVE_MOUSE, NATIVE_NONE };
+
+struct native_key_map { SDL_Scancode scancode; unsigned short matrix; };
+
+static const struct native_key_map native_keys[] = {
+    { SDL_SCANCODE_ESCAPE, 0x0A08 }, { SDL_SCANCODE_F1, 0x0B01 },
+    { SDL_SCANCODE_F2, 0x0A01 }, { SDL_SCANCODE_F3, 0x0B08 },
+    { SDL_SCANCODE_F4, 0x0A07 }, { SDL_SCANCODE_F5, 0x0B07 },
+    { SDL_SCANCODE_F6, 0x0A02 }, { SDL_SCANCODE_F7, 0x0B02 },
+    { SDL_SCANCODE_F8, 0x0A03 }, { SDL_SCANCODE_F9, 0x0B03 },
+    { SDL_SCANCODE_F10, 0x0A04 }, { SDL_SCANCODE_F11, 0x0203 },
+    { SDL_SCANCODE_F12, 0x0B06 }, { SDL_SCANCODE_NUMLOCKCLEAR, 0x0A05 },
+    { SDL_SCANCODE_PRINTSCREEN, 0x0B05 }, { SDL_SCANCODE_SCROLLLOCK, 0x0208 },
+    { SDL_SCANCODE_PAGEUP, 0x0207 }, { SDL_SCANCODE_GRAVE, 0x0D05 },
+    { SDL_SCANCODE_1, 0x0C05 }, { SDL_SCANCODE_2, 0x0505 },
+    { SDL_SCANCODE_3, 0x0605 }, { SDL_SCANCODE_4, 0x0705 },
+    { SDL_SCANCODE_5, 0x0805 }, { SDL_SCANCODE_6, 0x0905 },
+    { SDL_SCANCODE_7, 0x0906 }, { SDL_SCANCODE_8, 0x0806 },
+    { SDL_SCANCODE_9, 0x0706 }, { SDL_SCANCODE_0, 0x0606 },
+    { SDL_SCANCODE_MINUS, 0x1004 }, { SDL_SCANCODE_EQUALS, 0x0C06 },
+    { SDL_SCANCODE_KP_MINUS, 0x0506 }, { SDL_SCANCODE_KP_PLUS, 0x0703 },
+    { SDL_SCANCODE_KP_MULTIPLY, 0x0603 },
+    { SDL_SCANCODE_BACKSPACE, 0x0D06 }, { SDL_SCANCODE_TAB, 0x0D01 },
+    { SDL_SCANCODE_Q, 0x0C01 }, { SDL_SCANCODE_W, 0x0501 },
+    { SDL_SCANCODE_E, 0x0601 }, { SDL_SCANCODE_R, 0x0701 },
+    { SDL_SCANCODE_T, 0x0801 }, { SDL_SCANCODE_Y, 0x0901 },
+    { SDL_SCANCODE_U, 0x0904 }, { SDL_SCANCODE_I, 0x0804 },
+    { SDL_SCANCODE_O, 0x0704 }, { SDL_SCANCODE_P, 0x0604 },
+    { SDL_SCANCODE_LEFTBRACKET, 0x0C04 }, { SDL_SCANCODE_RIGHTBRACKET, 0x0406 },
+    { SDL_SCANCODE_CAPSLOCK, 0x0F05 }, { SDL_SCANCODE_A, 0x0D07 },
+    { SDL_SCANCODE_S, 0x0C07 }, { SDL_SCANCODE_D, 0x0507 },
+    { SDL_SCANCODE_F, 0x0607 }, { SDL_SCANCODE_G, 0x0707 },
+    { SDL_SCANCODE_H, 0x0807 }, { SDL_SCANCODE_J, 0x0907 },
+    { SDL_SCANCODE_K, 0x0903 }, { SDL_SCANCODE_L, 0x0803 },
+    { SDL_SCANCODE_SEMICOLON, 0x1105 }, { SDL_SCANCODE_APOSTROPHE, 0x0504 },
+    { SDL_SCANCODE_RETURN, 0x0D04 }, { SDL_SCANCODE_LSHIFT, 0x0E01 },
+    { SDL_SCANCODE_Z, 0x0D08 }, { SDL_SCANCODE_X, 0x0C08 },
+    { SDL_SCANCODE_C, 0x0508 }, { SDL_SCANCODE_V, 0x0608 },
+    { SDL_SCANCODE_B, 0x0708 }, { SDL_SCANCODE_N, 0x0808 },
+    { SDL_SCANCODE_M, 0x0908 }, { SDL_SCANCODE_COMMA, 0x0902 },
+    { SDL_SCANCODE_PERIOD, 0x0802 }, { SDL_SCANCODE_SLASH, 0x0702 },
+    { SDL_SCANCODE_UP, 0x0204 },
+    { SDL_SCANCODE_RSHIFT, 0x0E06 }, { SDL_SCANCODE_LCTRL, 0x1107 },
+    { SDL_SCANCODE_LALT, 0x1008 },
+    { SDL_SCANCODE_RALT, 0x1008 }, { SDL_SCANCODE_LGUI, 0x0F07 },
+    { SDL_SCANCODE_RGUI, 0x0F07 }, { SDL_SCANCODE_SPACE, 0x0602 },
+    { SDL_SCANCODE_KP_1, 0x1002 }, { SDL_SCANCODE_KP_2, 0x0E02 },
+    { SDL_SCANCODE_KP_3, 0x1006 },
+    { SDL_SCANCODE_END, 0x0206 }, { SDL_SCANCODE_LEFT, 0x0205 },
+    { SDL_SCANCODE_DOWN, 0x0305 }, { SDL_SCANCODE_RIGHT, 0x0405 }
+};
+
+static m64p_handle native_config[4];
+static enum native_peripheral native_type[4];
+static int native_present[4];
+static int native_plugin[4];
+static int native_control_type[4];
+static long long native_mouse_x[4], native_mouse_y[4];
+static unsigned long long native_config_hash;
+static unsigned int native_config_polls;
+static int native_config_seen;
+static int mouse_escape_released;
+static int mouse_escape_pending;
+static int mouse_focus_lost;
+static int mouse_focus_seen;
+static int mouse_recapture_click;
+
+static int mouse_capture_enabled(void)
+{
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (native_type[i] == NATIVE_MOUSE || controller[i].mouse)
+            return 1;
+    }
+    return 0;
+}
+
+static void restore_mouse_capture_on_focus(void)
+{
+    SDL_Window *focus;
+    int clicked;
+
+    if (!romopen || !mouse_escape_released)
+        return;
+    SDL_PumpEvents();
+    if (mouse_escape_pending) {
+        SDL_Window *grabbed;
+        if (SDL_SetRelativeMouseMode(SDL_FALSE) < 0)
+            DebugMessage(M64MSG_WARNING, "Could not release mouse: %s", SDL_GetError());
+        grabbed = SDL_GetGrabbedWindow();
+        if (grabbed)
+            SDL_SetWindowGrab(grabbed, SDL_FALSE);
+        SDL_ShowCursor(SDL_ENABLE);
+        mouse_focus_seen = SDL_GetKeyboardFocus() != NULL;
+        mouse_escape_pending = 0;
+        return;
+    }
+    focus = SDL_GetKeyboardFocus();
+    clicked = focus != NULL && SDL_GetMouseFocus() == focus &&
+        (SDL_GetMouseState(NULL, NULL) &
+         (SDL_BUTTON(SDL_BUTTON_LEFT) | SDL_BUTTON(SDL_BUTTON_RIGHT) |
+          SDL_BUTTON(SDL_BUTTON_MIDDLE)));
+    if (focus == NULL) {
+        if (mouse_focus_seen)
+            mouse_focus_lost = 1;
+    } else if ((mouse_focus_lost || clicked) && SDL_SetRelativeMouseMode(SDL_TRUE) == 0) {
+        SDL_ShowCursor(SDL_DISABLE);
+        mouse_recapture_click = clicked;
+        mouse_escape_released = 0;
+        mouse_focus_lost = 0;
+        mouse_focus_seen = 0;
+    } else {
+        mouse_focus_seen = 1;
+    }
+}
+
+static void poll_native_config_file(int baseline)
+{
+    const char *directory = ConfigGetUserConfigPath();
+    char path[1024], line[512], selected[4][16] = {{ 0 }};
+    unsigned long long hash = 14695981039346656037ULL;
+    FILE *file;
+    int port = -1, i;
+
+    if (!baseline && ++native_config_polls % 64 != 0) return;
+    if (!directory || snprintf(path, sizeof(path), "%s/mupen64plus.cfg", directory) >=
+        (int)sizeof(path)) return;
+    file = fopen(path, "r");
+    if (!file) {
+        if (baseline) {
+            native_config_seen = 1;
+            native_config_hash = 0;
+        }
+        return;
+    }
+    while (fgets(line, sizeof(line), file)) {
+        const unsigned char *byte = (const unsigned char *)line;
+        char *text = line;
+        int parsed_port;
+        while (*byte) {
+            hash = (hash ^ *byte++) * 1099511628211ULL;
+        }
+        while (isspace((unsigned char)*text)) text++;
+        if (*text == '[') {
+            port = sscanf(text, "[Input-SDL-Control%d]", &parsed_port) == 1 &&
+                parsed_port >= 1 && parsed_port <= 4 ? parsed_port - 1 : -1;
+        } else if (port >= 0 && strncmp(text, "peripheral", 10) == 0 &&
+                   (text[10] == '=' || isspace((unsigned char)text[10]))) {
+            size_t length = 0;
+            text += 10;
+            while (isspace((unsigned char)*text)) text++;
+            if (*text++ != '=') continue;
+            while (isspace((unsigned char)*text)) text++;
+            if (*text == '"') text++;
+            while (text[length] && text[length] != '"' &&
+                   !isspace((unsigned char)text[length]) && length < 15) length++;
+            memcpy(selected[port], text, length);
+            selected[port][length] = 0;
+        }
+    }
+    fclose(file);
+    if (native_config_seen && !baseline && hash != native_config_hash) {
+        for (i = 0; i < 4; i++) {
+            if (selected[i][0] && native_config[i]) {
+                ConfigSetParameter(native_config[i], "peripheral", M64TYPE_STRING, selected[i]);
+            }
+        }
+    }
+    native_config_hash = hash;
+    native_config_seen = 1;
+}
+
+static void refresh_native_peripheral(int port)
+{
+    const char *name;
+    enum native_peripheral type = NATIVE_STANDARD;
+    int i, grab = 0;
+
+    if (!native_config[port]) return;
+    poll_native_config_file(0);
+    name = ConfigGetParamString(native_config[port], "peripheral");
+    if (name && strcmp(name, "randnet") == 0) type = NATIVE_KEYBOARD;
+    else if (name && strcmp(name, "mouse") == 0) type = NATIVE_MOUSE;
+    else if (name && strcmp(name, "none") == 0) type = NATIVE_NONE;
+    if (type == native_type[port]) return;
+
+    native_type[port] = type;
+    controller[port].control->Present =
+        type == NATIVE_STANDARD ? native_present[port] : type != NATIVE_NONE;
+    controller[port].control->RawData = type == NATIVE_KEYBOARD || type == NATIVE_MOUSE;
+    controller[port].control->Plugin = native_plugin[port];
+    controller[port].control->Type =
+        type == NATIVE_KEYBOARD ? CONT_TYPE_KEYBOARD : native_control_type[port];
+    native_mouse_x[port] = native_mouse_y[port] = 0;
+    for (i = 0; i < 4; i++)
+        grab |= native_type[i] == NATIVE_MOUSE || controller[i].mouse;
+    if (romopen) {
+        SDL_SetRelativeMouseMode(grab ? SDL_TRUE : SDL_FALSE);
+        SDL_ShowCursor(grab ? SDL_DISABLE : SDL_ENABLE);
+        mouse_escape_released = 0;
+        mouse_escape_pending = 0;
+        mouse_focus_lost = 0;
+        mouse_focus_seen = 0;
+        mouse_recapture_click = 0;
+    }
+    DebugMessage(M64MSG_INFO, "N64 port %d peripheral: %s", port + 1,
+                 type == NATIVE_KEYBOARD ? "Randnet keyboard" :
+                 type == NATIVE_MOUSE ? "N64 mouse" :
+                 type == NATIVE_NONE ? "none" : "controller");
+}
+
+static int native_clamp_delta(long long *delta)
+{
+    int value = *delta > 127 ? 127 : *delta < -128 ? -128 : (int)*delta;
+    *delta -= value;
+    return value;
+}
+
+static void read_native_peripheral(int port, unsigned char *command)
+{
+    unsigned char *response = command + 2 + (command[0] & 0x3f);
+    int i;
+
+    if (native_type[port] == NATIVE_KEYBOARD) {
+        if (command[2] == 0 || command[2] == 0xff) {
+            if (command[0] != 1 || command[1] != 3) goto unsupported;
+            response[0] = 0;
+            response[1] = 2;
+            response[2] = 0;
+        } else if (command[2] == 0x13) {
+            const Uint8 *pressed;
+            unsigned short found[3] = { 0, 0, 0 };
+            int count = 0;
+            if (command[0] != 2 || command[1] != 7) goto unsupported;
+            SDL_PumpEvents();
+            pressed = SDL_GetKeyboardState(NULL);
+            for (i = 0; i < (int)(sizeof(native_keys) / sizeof(native_keys[0])); i++) {
+                SDL_Scancode scancode = native_keys[i].scancode;
+                if (!pressed[scancode] && !myKeyState[scancode]) continue;
+                if (count < 3) found[count] = native_keys[i].matrix;
+                count++;
+            }
+            memset(response, 0, 7);
+            response[6] = pressed[SDL_SCANCODE_HOME] || myKeyState[SDL_SCANCODE_HOME];
+            if (count > 3) {
+                response[6] |= 0x10;
+            } else {
+                for (i = 0; i < count; i++) {
+                    response[i * 2] = (unsigned char)(found[i] >> 8);
+                    response[i * 2 + 1] = (unsigned char)found[i];
+                }
+            }
+        } else goto unsupported;
+    } else if (native_type[port] == NATIVE_MOUSE) {
+        if (command[2] == 0 || command[2] == 0xff) {
+            if (command[0] != 1 || command[1] != 3) goto unsupported;
+            response[0] = 2;
+            response[1] = 0;
+            response[2] = 0;
+        } else if (command[2] == 1) {
+            int x, y;
+            Uint32 buttons;
+            if (command[0] != 1 || command[1] != 4) goto unsupported;
+            if (mouse_escape_released) {
+                native_mouse_x[port] = native_mouse_y[port] = 0;
+                memset(response, 0, 4);
+                return;
+            }
+            SDL_PumpEvents();
+            if (mouse_recapture_click) {
+                SDL_GetRelativeMouseState(NULL, NULL);
+                if (SDL_GetMouseState(NULL, NULL) == 0)
+                    mouse_recapture_click = 0;
+                native_mouse_x[port] = native_mouse_y[port] = 0;
+                memset(response, 0, 4);
+                return;
+            }
+            buttons = SDL_GetRelativeMouseState(&x, &y);
+            for (i = 0; i < 4; i++) {
+                if (native_type[i] == NATIVE_MOUSE) {
+                    native_mouse_x[i] += x;
+                    native_mouse_y[i] -= y;
+                }
+            }
+            response[0] = (buttons & SDL_BUTTON(SDL_BUTTON_LEFT) ? 0x80 : 0) |
+                          (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT) ? 0x40 : 0);
+            response[1] = 0;
+            response[2] = (unsigned char)native_clamp_delta(&native_mouse_x[port]);
+            response[3] = (unsigned char)native_clamp_delta(&native_mouse_y[port]);
+        } else goto unsupported;
+    }
+    return;
+
+unsupported:
+    command[1] |= 0x80;
+}
+
+#if __linux__ && !SDL_VERSION_ATLEAST(2,0,0)
+static struct ff_effect ffeffect[4];
+static struct ff_effect ffstrong[4];
+static struct ff_effect ffweak[4];
+#endif //__linux__
 
 /* Global functions */
 void DebugMessage(int level, const char *message, ...)
@@ -323,7 +627,7 @@ doSdlKeys(const unsigned char* keystate)
     static int grabmouse = 1, grabtoggled = 0;
 
     axis_max_val = 80;
-    if (keystate[SDL_SCANCODE_RCTRL])
+    if (keystate[SDL_SCANCODE_RCTRL] && !mouse_capture_enabled())
         axis_max_val -= 40;
     if (keystate[SDL_SCANCODE_RSHIFT])
         axis_max_val -= 25;
@@ -428,6 +732,8 @@ EXPORT void CALL ControllerCommand(int Control, unsigned char *Command)
 
     if (Control == -1)
         return;
+    if (native_type[Control] != NATIVE_STANDARD)
+        return;
 
     switch (Command[2])
     {
@@ -518,6 +824,13 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     SDL_Event event;
     unsigned char mstate;
 
+    refresh_native_peripheral(Control);
+    restore_mouse_capture_on_focus();
+    if (native_type[Control] != NATIVE_STANDARD) {
+        Keys->Value = 0;
+        return;
+    }
+
     SDL_PumpEvents();
 
     // Handle keyboard input first
@@ -526,7 +839,7 @@ EXPORT void CALL GetKeys( int Control, BUTTONS *Keys )
     
     // attenuate maximum analog stick movement if right shift/control is pressed
     axis_max_val = 80;
-    if (myKeyState[SDL_SCANCODE_RCTRL])
+    if (myKeyState[SDL_SCANCODE_RCTRL] && !mouse_capture_enabled())
         axis_max_val -= 40;
     if (myKeyState[SDL_SCANCODE_RSHIFT])
         axis_max_val -= 25;
@@ -829,6 +1142,23 @@ EXPORT void CALL InitiateControllers(CONTROL_INFO ControlInfo)
 
     // read configuration
     load_configuration(0);
+    native_config_seen = 0;
+    native_config_polls = 0;
+
+    for (i = 0; i < 4; i++) {
+        char section[32];
+        sprintf(section, "Input-SDL-Control%d", i + 1);
+        if (ConfigOpenSection(section, &native_config[i]) != M64ERR_SUCCESS)
+            continue;
+        ConfigSetDefaultString(native_config[i], "peripheral", "controller",
+            "N64 port device: controller, randnet, mouse, or none");
+        native_type[i] = NATIVE_STANDARD;
+        native_present[i] = controller[i].control->Present;
+        native_plugin[i] = controller[i].control->Plugin;
+        native_control_type[i] = controller[i].control->Type;
+        refresh_native_peripheral(i);
+    }
+    poll_native_config_file(1);
 
     for( i = 0; i < 4; i++ )
     {
@@ -858,6 +1188,12 @@ EXPORT void CALL InitiateControllers(CONTROL_INFO ControlInfo)
 *******************************************************************/
 EXPORT void CALL ReadController(int Control, unsigned char *Command)
 {
+    restore_mouse_capture_on_focus();
+    if (Control >= 0 && Control < 4 && Command != NULL &&
+        native_type[Control] != NATIVE_STANDARD) {
+        read_native_peripheral(Control, Command);
+        return;
+    }
 #ifdef _DEBUG
     if (Command != NULL)
         DebugMessage(M64MSG_INFO, "Raw Read (cont=%d):  %02X %02X %02X %02X %02X %02X", Control,
@@ -884,6 +1220,11 @@ EXPORT void CALL RomClosed(void)
     // release/ungrab mouse
     SDL_SetRelativeMouseMode(SDL_FALSE);
     SDL_ShowCursor( 1 );
+    mouse_escape_released = 0;
+    mouse_escape_pending = 0;
+    mouse_focus_lost = 0;
+    mouse_focus_seen = 0;
+    mouse_recapture_click = 0;
 
     romopen = 0;
 }
@@ -899,6 +1240,12 @@ EXPORT int CALL RomOpen(void)
 {
     int i;
 
+    mouse_escape_released = 0;
+    mouse_escape_pending = 0;
+    mouse_focus_lost = 0;
+    mouse_focus_seen = 0;
+    mouse_recapture_click = 0;
+
     // open joysticks
     for (i = 0; i < 4; i++) {
         InitiateJoysticks(i);
@@ -906,7 +1253,9 @@ EXPORT int CALL RomOpen(void)
     }
 
     // grab mouse
-    if (controller[0].mouse || controller[1].mouse || controller[2].mouse || controller[3].mouse)
+    if (controller[0].mouse || controller[1].mouse || controller[2].mouse || controller[3].mouse ||
+        native_type[0] == NATIVE_MOUSE || native_type[1] == NATIVE_MOUSE ||
+        native_type[2] == NATIVE_MOUSE || native_type[3] == NATIVE_MOUSE)
     {
         SDL_ShowCursor( 0 );
         if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
@@ -927,7 +1276,16 @@ EXPORT int CALL RomOpen(void)
 *******************************************************************/
 EXPORT void CALL SDL_KeyDown(int keymod, int keysym)
 {
-    myKeyState[keysym] = 1;
+    if (keysym == SDL_SCANCODE_RCTRL && !myKeyState[keysym] && romopen &&
+        mouse_capture_enabled()) {
+        mouse_escape_released = 1;
+        mouse_escape_pending = 1;
+        mouse_focus_lost = 0;
+        mouse_focus_seen = 0;
+        mouse_recapture_click = 0;
+    }
+    if (keysym >= 0 && keysym < SDL_NUM_SCANCODES)
+        myKeyState[keysym] = 1;
 }
 
 /******************************************************************
@@ -939,5 +1297,6 @@ EXPORT void CALL SDL_KeyDown(int keymod, int keysym)
 *******************************************************************/
 EXPORT void CALL SDL_KeyUp(int keymod, int keysym)
 {
-    myKeyState[keysym] = 0;
+    if (keysym >= 0 && keysym < SDL_NUM_SCANCODES)
+        myKeyState[keysym] = 0;
 }
